@@ -17,10 +17,13 @@ export async function getWines(options?: {
     lieuAchat?: string;
     millesime?: number;
     inStock?: boolean; // true = nombre > 0, false = nombre = 0, undefined = all
+    maturity?: "keep" | "peak" | "old"; // Filter by maturity status
     limit?: number;
     offset?: number;
 }) {
-    const { search, type, region, appellation, cepage, lieuAchat, millesime, inStock, limit = 50, offset = 0 } = options || {};
+    const { search, type, region, appellation, cepage, lieuAchat, millesime, inStock, maturity, limit = 50, offset = 0 } = options || {};
+
+    const currentYear = new Date().getFullYear();
 
     // Build where conditions
     const conditions = [];
@@ -64,6 +67,15 @@ export async function getWines(options?: {
         conditions.push(sql`${wines.nombre} > 0`);
     } else if (inStock === false) {
         conditions.push(sql`${wines.nombre} = 0 OR ${wines.nombre} IS NULL`);
+    }
+
+    // Filter by maturity
+    if (maturity === "keep") {
+        conditions.push(sql`${wines.debutApogee} > ${currentYear} AND ${wines.nombre} > 0`);
+    } else if (maturity === "peak") {
+        conditions.push(sql`${wines.debutApogee} <= ${currentYear} AND ${wines.finApogee} >= ${currentYear} AND ${wines.nombre} > 0`);
+    } else if (maturity === "old") {
+        conditions.push(sql`${wines.finApogee} < ${currentYear} AND ${wines.nombre} > 0`);
     }
 
     const result = await db

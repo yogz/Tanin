@@ -29,6 +29,7 @@ interface CellarPageProps {
         lieuAchat?: string;
         millesime?: string;
         tab?: string;
+        maturity?: "keep" | "peak" | "old";
     }>;
 }
 
@@ -41,6 +42,7 @@ async function WineList({
     lieuAchat,
     millesime,
     inStock,
+    maturity,
 }: {
     search?: string;
     type?: string;
@@ -50,6 +52,7 @@ async function WineList({
     lieuAchat?: string;
     millesime?: number;
     inStock: boolean;
+    maturity?: "keep" | "peak" | "old";
 }) {
     const wines = await getWines({
         search,
@@ -60,6 +63,7 @@ async function WineList({
         lieuAchat,
         millesime,
         inStock,
+        maturity,
         limit: 200
     });
 
@@ -129,6 +133,9 @@ export default async function CellarPage({ searchParams }: CellarPageProps) {
     const currentTab = params.tab === "consumed" ? "consumed" : "current";
     const inStock = currentTab === "current";
     const millesime = params.millesime ? parseInt(params.millesime) : undefined;
+    const maturity = params.maturity && ["keep", "peak", "old"].includes(params.maturity) 
+        ? params.maturity as "keep" | "peak" | "old" 
+        : undefined;
 
     return (
         <div className="min-h-screen">
@@ -171,6 +178,7 @@ export default async function CellarPage({ searchParams }: CellarPageProps) {
                         lieuAchat={params.lieuAchat}
                         millesime={millesime}
                         inStock={inStock}
+                        maturity={maturity}
                     />
                 </Suspense>
             </div>

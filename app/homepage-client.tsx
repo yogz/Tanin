@@ -143,29 +143,35 @@ export default function HomepageClient({
             {/* Stats Cards */}
             <motion.div variants={itemVariants} className="px-5 -mt-1">
                 <div className="grid grid-cols-3 gap-3">
-                    <GlassCard className="p-4 text-center">
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                            <Wine className="w-5 h-5 text-purple-400" />
-                        </div>
-                        <p className="text-2xl font-bold">{stats.totalBottles}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Bouteilles</p>
-                    </GlassCard>
+                    <Link href="/cellar">
+                        <GlassCard className="p-4 text-center hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer">
+                            <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                                <Wine className="w-5 h-5 text-purple-400" />
+                            </div>
+                            <p className="text-2xl font-bold">{stats.totalBottles}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Bouteilles</p>
+                        </GlassCard>
+                    </Link>
 
-                    <GlassCard className="p-4 text-center">
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-green-500/20 flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-green-400" />
-                        </div>
-                        <p className="text-2xl font-bold">{maturity.peak}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">À Boire</p>
-                    </GlassCard>
+                    <Link href="/cellar?maturity=peak">
+                        <GlassCard className="p-4 text-center hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer">
+                            <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-green-500/20 flex items-center justify-center">
+                                <Clock className="w-5 h-5 text-green-400" />
+                            </div>
+                            <p className="text-2xl font-bold">{maturity.peak}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">À Boire</p>
+                        </GlassCard>
+                    </Link>
 
-                    <GlassCard className="p-4 text-center">
-                        <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                            <TrendingUp className="w-5 h-5 text-amber-400" />
-                        </div>
-                        <p className="text-2xl font-bold">{stats.totalValue > 0 ? `${Math.round(stats.totalValue)}€` : "—"}</p>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valeur</p>
-                    </GlassCard>
+                    <Link href="/value">
+                        <GlassCard className="p-4 text-center hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer">
+                            <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                                <TrendingUp className="w-5 h-5 text-amber-400" />
+                            </div>
+                            <p className="text-2xl font-bold">{stats.totalValue > 0 ? `${Math.round(stats.totalValue)}€` : "—"}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Valeur</p>
+                        </GlassCard>
+                    </Link>
                 </div>
             </motion.div>
 
