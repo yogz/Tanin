@@ -31,7 +31,7 @@ interface CellarPageProps {
         lieuAchat?: string;
         millesime?: string;
         tab?: string;
-        maturity?: "keep" | "peak" | "old";
+        maturity?: "keep" | "drink" | "drinkWait" | "old";
     }>;
 }
 
@@ -54,7 +54,7 @@ async function WineList({
     lieuAchat?: string;
     millesime?: number;
     inStock: boolean;
-    maturity?: "keep" | "peak" | "old";
+    maturity?: "keep" | "drink" | "drinkWait" | "old";
 }) {
     const wines = await getWines({
         search,
@@ -137,8 +137,8 @@ export default async function CellarPage({ searchParams }: CellarPageProps) {
     const currentTab = params.tab === "consumed" ? "consumed" : "current";
     const inStock = currentTab === "current";
     const millesime = params.millesime ? parseInt(params.millesime) : undefined;
-    const maturity = params.maturity && ["keep", "peak", "old"].includes(params.maturity) 
-        ? params.maturity as "keep" | "peak" | "old" 
+    const maturity = params.maturity && ["keep", "drink", "drinkWait", "old"].includes(params.maturity)
+        ? params.maturity as "keep" | "drink" | "drinkWait" | "old"
         : undefined;
 
     // Get consumption data for chart if on consumed tab
