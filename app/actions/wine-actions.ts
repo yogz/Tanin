@@ -270,7 +270,7 @@ export async function getValueDetails() {
         .orderBy(desc(sql`${wines.prixAchat} * ${wines.nombre}`))
         .limit(20);
 
-    // Calculate totals
+    // Calculate totals for in-stock wines
     const totalResult = await db
         .select({
             totalValue: sql<number>`COALESCE(SUM(${wines.prixAchat} * ${wines.nombre}), 0)`,
@@ -280,7 +280,19 @@ export async function getValueDetails() {
         .from(wines)
         .where(sql`${wines.nombre} > 0 AND ${wines.prixAchat} IS NOT NULL AND ${wines.prixAchat} > 0`);
 
-    // Value by type
+    // Calculate totals for consumed wines (nombre = 0 or NULL, but had prixAchat)
+    // For consumed wines, we estimate based on the assumption they had at least 1 bottle
+    // We use the prixAchat as the value per bottle consumed
+    const consumedResult = await db
+        .select({
+            totalValue: sql<number>`COALESCE(SUM(${wines.prixAchat}), 0)`,
+            totalBottles: sql<number>`COUNT(*)`,
+            avgPrice: sql<number>`COALESCE(AVG(${wines.prixAchat}), 0)`,
+        })
+        .from(wines)
+        .where(sql`(${wines.nombre} = 0 OR ${wines.nombre} IS NULL) AND ${wines.prixAchat} IS NOT NULL AND ${wines.prixAchat} > 0`);
+
+    // Value by type (in stock)
     const byTypeResult = await db
         .select({
             type: wines.type,
@@ -292,6 +304,18 @@ export async function getValueDetails() {
         .groupBy(wines.type)
         .orderBy(desc(sql`SUM(${wines.prixAchat} * ${wines.nombre})`));
 
+    // Value by type (consumed)
+    const byTypeConsumedResult = await db
+        .select({
+            type: wines.type,
+            value: sql<number>`COALESCE(SUM(${wines.prixAchat}), 0)`,
+            count: sql<number>`COUNT(*)`,
+        })
+        .from(wines)
+        .where(sql`(${wines.nombre} = 0 OR ${wines.nombre} IS NULL) AND ${wines.prixAchat} IS NOT NULL`)
+        .groupBy(wines.type)
+        .orderBy(desc(sql`SUM(${wines.prixAchat})`));
+
     return {
         topWines: result.map((w) => ({
             ...w,
@@ -302,7 +326,17 @@ export async function getValueDetails() {
             totalBottles: Number(totalResult[0]?.totalBottles) || 0,
             avgPrice: Math.round(Number(totalResult[0]?.avgPrice) || 0),
         },
+        consumed: {
+            totalValue: Number(consumedResult[0]?.totalValue) || 0,
+            totalBottles: Number(consumedResult[0]?.totalBottles) || 0,
+            avgPrice: Math.round(Number(consumedResult[0]?.avgPrice) || 0),
+        },
         byType: byTypeResult.map((r) => ({
+            type: r.type || "Inconnu",
+            value: Number(r.value),
+            count: Number(r.count),
+        })),
+        byTypeConsumed: byTypeConsumedResult.map((r) => ({
             type: r.type || "Inconnu",
             value: Number(r.value),
             count: Number(r.count),
