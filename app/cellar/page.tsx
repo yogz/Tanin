@@ -15,6 +15,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CellarFilters } from "./cellar-filters";
 import { CellarTabs } from "./cellar-tabs";
 
+// Force dynamic rendering to avoid too many DB connections at build time
+export const dynamic = "force-dynamic";
+
 interface CellarPageProps {
     searchParams: Promise<{
         search?: string;
@@ -118,15 +121,15 @@ function WineListSkeleton() {
 
 export default async function CellarPage({ searchParams }: CellarPageProps) {
     const params = await searchParams;
-    const [types, regions, appellations, cepages, lieuxAchat, millesimes, counts] = await Promise.all([
-        getUniqueTypes(),
-        getUniqueRegions(),
-        getUniqueAppellations(),
-        getUniqueCepages(),
-        getUniqueLieuxAchat(),
-        getUniqueMillesimes(),
-        getWineCounts(),
-    ]);
+
+    // Execute queries sequentially to avoid connection limit issues with Neon
+    const types = await getUniqueTypes();
+    const regions = await getUniqueRegions();
+    const appellations = await getUniqueAppellations();
+    const cepages = await getUniqueCepages();
+    const lieuxAchat = await getUniqueLieuxAchat();
+    const millesimes = await getUniqueMillesimes();
+    const counts = await getWineCounts();
 
     const currentTab = params.tab === "consumed" ? "consumed" : "current";
     const inStock = currentTab === "current";
