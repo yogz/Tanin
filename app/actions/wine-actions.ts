@@ -14,10 +14,11 @@ export async function getWines(options?: {
     region?: string;
     appellation?: string;
     cepage?: string;
+    inStock?: boolean; // true = nombre > 0, false = nombre = 0, undefined = all
     limit?: number;
     offset?: number;
 }) {
-    const { search, type, region, appellation, cepage, limit = 50, offset = 0 } = options || {};
+    const { search, type, region, appellation, cepage, inStock, limit = 50, offset = 0 } = options || {};
 
     // Build where conditions
     const conditions = [];
@@ -49,6 +50,12 @@ export async function getWines(options?: {
         conditions.push(eq(wines.cepage, cepage));
     }
 
+    if (inStock === true) {
+        conditions.push(sql`${wines.nombre} > 0`);
+    } else if (inStock === false) {
+        conditions.push(sql`${wines.nombre} = 0 OR ${wines.nombre} IS NULL`);
+    }
+
     const result = await db
         .select()
         .from(wines)
@@ -58,6 +65,23 @@ export async function getWines(options?: {
         .orderBy(desc(wines.createdAt));
 
     return result;
+}
+
+export async function getWineCounts() {
+    const inStockResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(wines)
+        .where(sql`${wines.nombre} > 0`);
+
+    const consumedResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(wines)
+        .where(sql`${wines.nombre} = 0 OR ${wines.nombre} IS NULL`);
+
+    return {
+        inStock: Number(inStockResult[0]?.count) || 0,
+        consumed: Number(consumedResult[0]?.count) || 0,
+    };
 }
 
 export async function getWine(id: number): Promise<WineWithTastings | null> {

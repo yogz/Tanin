@@ -1,11 +1,10 @@
 import { Suspense } from "react";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { getWines, getUniqueTypes, getUniqueRegions } from "@/app/actions/wine-actions";
+import { getWines, getUniqueTypes, getUniqueRegions, getWineCounts } from "@/app/actions/wine-actions";
 import { WineCard } from "@/components/features/wine/wine-card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CellarFilters } from "./cellar-filters";
+import { CellarTabs } from "./cellar-tabs";
 
 interface CellarPageProps {
     searchParams: Promise<{
@@ -14,6 +13,7 @@ interface CellarPageProps {
         region?: string;
         appellation?: string;
         cepage?: string;
+        tab?: string;
     }>;
 }
 
@@ -23,19 +23,23 @@ async function WineList({
     region,
     appellation,
     cepage,
+    inStock,
 }: {
     search?: string;
     type?: string;
     region?: string;
     appellation?: string;
     cepage?: string;
+    inStock: boolean;
 }) {
-    const wines = await getWines({ search, type, region, appellation, cepage, limit: 50 });
+    const wines = await getWines({ search, type, region, appellation, cepage, inStock, limit: 100 });
 
     if (wines.length === 0) {
         return (
             <GlassCard className="p-8 text-center">
-                <p className="text-muted-foreground">No wines found</p>
+                <p className="text-muted-foreground">
+                    {inStock ? "Aucun vin en cave" : "Aucun vin consommé"}
+                </p>
             </GlassCard>
         );
     }
@@ -59,7 +63,7 @@ async function WineList({
                 />
             ))}
             <p className="text-center text-sm text-muted-foreground pt-4">
-                {wines.length} wine{wines.length !== 1 ? "s" : ""}
+                {wines.length} vin{wines.length !== 1 ? "s" : ""}
             </p>
         </div>
     );
@@ -89,15 +93,26 @@ function WineListSkeleton() {
 
 export default async function CellarPage({ searchParams }: CellarPageProps) {
     const params = await searchParams;
-    const types = await getUniqueTypes();
-    const regions = await getUniqueRegions();
+    const [types, regions, counts] = await Promise.all([
+        getUniqueTypes(),
+        getUniqueRegions(),
+        getWineCounts(),
+    ]);
+
+    const currentTab = params.tab === "consumed" ? "consumed" : "current";
+    const inStock = currentTab === "current";
 
     return (
         <div className="min-h-screen">
             {/* Header */}
             <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50">
                 <div className="px-4 pt-4 pb-3">
-                    <h1 className="text-2xl font-bold mb-3">My Cellar</h1>
+                    <h1 className="text-2xl font-bold mb-3">Ma Cave</h1>
+                    <CellarTabs
+                        inStockCount={counts.inStock}
+                        consumedCount={counts.consumed}
+                        currentTab={currentTab}
+                    />
                     <CellarFilters
                         types={types}
                         regions={regions}
@@ -117,6 +132,7 @@ export default async function CellarPage({ searchParams }: CellarPageProps) {
                         region={params.region}
                         appellation={params.appellation}
                         cepage={params.cepage}
+                        inStock={inStock}
                     />
                 </Suspense>
             </div>
