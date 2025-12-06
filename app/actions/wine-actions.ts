@@ -651,3 +651,28 @@ export async function addWine(data: {
     return { success: true, wineId: result[0].id };
 }
 
+export async function getProfileStats() {
+    // Total bottles in stock
+    const bottlesResult = await db
+        .select({ sum: sql<number>`COALESCE(SUM(${wines.nombre}), 0)` })
+        .from(wines)
+        .where(sql`${wines.nombre} > 0`);
+
+    // Total tastings count
+    const tastingsResult = await db
+        .select({ count: sql<number>`COUNT(*)` })
+        .from(tastings);
+
+    // Average rating from tastings
+    const avgRatingResult = await db
+        .select({ avg: sql<number>`COALESCE(AVG(CAST(${tastings.rating} AS DECIMAL)), 0)` })
+        .from(tastings)
+        .where(sql`${tastings.rating} IS NOT NULL`);
+
+    return {
+        totalBottles: Number(bottlesResult[0]?.sum) || 0,
+        totalTastings: Number(tastingsResult[0]?.count) || 0,
+        avgRating: Number(avgRatingResult[0]?.avg).toFixed(1) || "0.0",
+    };
+}
+
