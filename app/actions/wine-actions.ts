@@ -17,7 +17,7 @@ export async function getWines(options?: {
     lieuAchat?: string;
     millesime?: number;
     inStock?: boolean; // true = nombre > 0, false = nombre = 0, undefined = all
-    maturity?: "keep" | "peak" | "old"; // Filter by maturity status
+    maturity?: "keep" | "drink" | "drinkWait" | "old"; // Filter by maturity status
     limit?: number;
     offset?: number;
 }) {
@@ -72,8 +72,10 @@ export async function getWines(options?: {
     // Filter by maturity
     if (maturity === "keep") {
         conditions.push(sql`${wines.debutApogee} > ${currentYear} AND ${wines.nombre} > 0`);
-    } else if (maturity === "peak") {
-        conditions.push(sql`${wines.debutApogee} <= ${currentYear} AND ${wines.finApogee} >= ${currentYear} AND ${wines.nombre} > 0`);
+    } else if (maturity === "drink") {
+        conditions.push(sql`${wines.finApogee} = ${currentYear} AND ${wines.nombre} > 0`);
+    } else if (maturity === "drinkWait") {
+        conditions.push(sql`${wines.debutApogee} <= ${currentYear} AND ${wines.finApogee} > ${currentYear} AND ${wines.nombre} > 0`);
     } else if (maturity === "old") {
         conditions.push(sql`${wines.finApogee} < ${currentYear} AND ${wines.nombre} > 0`);
     }
@@ -505,11 +507,17 @@ export async function getMaturityProfile() {
         .from(wines)
         .where(sql`${wines.debutApogee} > ${currentYear} AND ${wines.nombre} > 0`);
 
-    // Wines at peak (current year is within apogee window)
-    const peakResult = await db
+    // Wines to drink now (last year of peak window)
+    const drinkResult = await db
         .select({ count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)` })
         .from(wines)
-        .where(sql`${wines.debutApogee} <= ${currentYear} AND ${wines.finApogee} >= ${currentYear} AND ${wines.nombre} > 0`);
+        .where(sql`${wines.finApogee} = ${currentYear} AND ${wines.nombre} > 0`);
+
+    // Wines to drink or wait (in peak window but not last year)
+    const drinkWaitResult = await db
+        .select({ count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)` })
+        .from(wines)
+        .where(sql`${wines.debutApogee} <= ${currentYear} AND ${wines.finApogee} > ${currentYear} AND ${wines.nombre} > 0`);
 
     // Wines past peak (end of apogee was in past)
     const oldResult = await db
@@ -519,7 +527,8 @@ export async function getMaturityProfile() {
 
     return {
         keep: Number(keepResult[0]?.count) || 0,
-        peak: Number(peakResult[0]?.count) || 0,
+        drink: Number(drinkResult[0]?.count) || 0,
+        drinkWait: Number(drinkWaitResult[0]?.count) || 0,
         old: Number(oldResult[0]?.count) || 0,
     };
 }
