@@ -1,8 +1,10 @@
-import { User, Settings, Moon, LogOut, Wine, Star, Bell } from "lucide-react";
+import { User, Settings, Moon, Wine, Bell } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
-import { Button } from "@/components/ui/button";
+import { getSession } from "@/lib/auth";
+import { LogoutButtonSimple } from "@/components/auth/logout-button-simple";
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
+    const session = await getSession();
     return (
         <div className="min-h-screen">
             {/* Header */}
@@ -14,8 +16,8 @@ export default function ProfilePage() {
                             <User className="w-8 h-8 text-blue-400" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-bold">Wine Lover</h1>
-                            <p className="text-muted-foreground">wine.lover@example.com</p>
+                            <h1 className="text-2xl font-bold">{session?.name || "Utilisateur"}</h1>
+                            <p className="text-muted-foreground">{session?.email || "Non connecté"}</p>
                         </div>
                     </div>
                 </div>
@@ -88,10 +90,7 @@ export default function ProfilePage() {
                 </GlassCard>
 
                 <div className="pt-4">
-                    <Button variant="outline" className="w-full h-12 text-red-400 border-red-400/30 hover:bg-red-400/10">
-                        <LogOut className="w-4 h-4 mr-2" />
-                        Sign Out
-                    </Button>
+                    <LogoutButtonSimple />
                 </div>
 
                 <p className="text-center text-xs text-muted-foreground pt-4">

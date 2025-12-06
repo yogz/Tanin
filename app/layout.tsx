@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { MobileNav } from "@/components/layout/mobile-nav";
+import { ConditionalNav } from "@/components/layout/conditional-nav";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -36,7 +36,7 @@ export default function RootLayout({
     <html lang="fr" className="dark">
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground min-h-screen pb-24`}>
         {children}
-        <MobileNav />
+        <ConditionalNav />
         <Toaster
           position="top-center"
           toastOptions={{
