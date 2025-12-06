@@ -1,5 +1,14 @@
 import { Suspense } from "react";
-import { getWines, getUniqueTypes, getUniqueRegions, getWineCounts } from "@/app/actions/wine-actions";
+import {
+    getWines,
+    getUniqueTypes,
+    getUniqueRegions,
+    getUniqueAppellations,
+    getUniqueCepages,
+    getUniqueLieuxAchat,
+    getUniqueMillesimes,
+    getWineCounts
+} from "@/app/actions/wine-actions";
 import { WineCard } from "@/components/features/wine/wine-card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,6 +22,8 @@ interface CellarPageProps {
         region?: string;
         appellation?: string;
         cepage?: string;
+        lieuAchat?: string;
+        millesime?: string;
         tab?: string;
     }>;
 }
@@ -23,6 +34,8 @@ async function WineList({
     region,
     appellation,
     cepage,
+    lieuAchat,
+    millesime,
     inStock,
 }: {
     search?: string;
@@ -30,9 +43,21 @@ async function WineList({
     region?: string;
     appellation?: string;
     cepage?: string;
+    lieuAchat?: string;
+    millesime?: number;
     inStock: boolean;
 }) {
-    const wines = await getWines({ search, type, region, appellation, cepage, inStock, limit: 100 });
+    const wines = await getWines({
+        search,
+        type,
+        region,
+        appellation,
+        cepage,
+        lieuAchat,
+        millesime,
+        inStock,
+        limit: 200
+    });
 
     if (wines.length === 0) {
         return (
@@ -93,14 +118,19 @@ function WineListSkeleton() {
 
 export default async function CellarPage({ searchParams }: CellarPageProps) {
     const params = await searchParams;
-    const [types, regions, counts] = await Promise.all([
+    const [types, regions, appellations, cepages, lieuxAchat, millesimes, counts] = await Promise.all([
         getUniqueTypes(),
         getUniqueRegions(),
+        getUniqueAppellations(),
+        getUniqueCepages(),
+        getUniqueLieuxAchat(),
+        getUniqueMillesimes(),
         getWineCounts(),
     ]);
 
     const currentTab = params.tab === "consumed" ? "consumed" : "current";
     const inStock = currentTab === "current";
+    const millesime = params.millesime ? parseInt(params.millesime) : undefined;
 
     return (
         <div className="min-h-screen">
@@ -116,9 +146,17 @@ export default async function CellarPage({ searchParams }: CellarPageProps) {
                     <CellarFilters
                         types={types}
                         regions={regions}
+                        appellations={appellations}
+                        cepages={cepages}
+                        lieuxAchat={lieuxAchat}
+                        millesimes={millesimes}
                         currentSearch={params.search}
                         currentType={params.type}
                         currentRegion={params.region}
+                        currentAppellation={params.appellation}
+                        currentCepage={params.cepage}
+                        currentLieuAchat={params.lieuAchat}
+                        currentMillesime={params.millesime}
                     />
                 </div>
             </div>
@@ -132,6 +170,8 @@ export default async function CellarPage({ searchParams }: CellarPageProps) {
                         region={params.region}
                         appellation={params.appellation}
                         cepage={params.cepage}
+                        lieuAchat={params.lieuAchat}
+                        millesime={millesime}
                         inStock={inStock}
                     />
                 </Suspense>

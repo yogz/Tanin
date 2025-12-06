@@ -14,11 +14,13 @@ export async function getWines(options?: {
     region?: string;
     appellation?: string;
     cepage?: string;
+    lieuAchat?: string;
+    millesime?: number;
     inStock?: boolean; // true = nombre > 0, false = nombre = 0, undefined = all
     limit?: number;
     offset?: number;
 }) {
-    const { search, type, region, appellation, cepage, inStock, limit = 50, offset = 0 } = options || {};
+    const { search, type, region, appellation, cepage, lieuAchat, millesime, inStock, limit = 50, offset = 0 } = options || {};
 
     // Build where conditions
     const conditions = [];
@@ -48,6 +50,14 @@ export async function getWines(options?: {
 
     if (cepage) {
         conditions.push(eq(wines.cepage, cepage));
+    }
+
+    if (lieuAchat) {
+        conditions.push(eq(wines.lieuAchat, lieuAchat));
+    }
+
+    if (millesime) {
+        conditions.push(eq(wines.millesime, millesime));
     }
 
     if (inStock === true) {
@@ -187,6 +197,46 @@ export async function getUniqueTypes() {
         .orderBy(asc(wines.type));
 
     return result.map((r) => r.type).filter(Boolean) as string[];
+}
+
+export async function getUniqueAppellations() {
+    const result = await db
+        .selectDistinct({ appellation: wines.appellation })
+        .from(wines)
+        .where(sql`${wines.appellation} IS NOT NULL AND ${wines.appellation} != ''`)
+        .orderBy(asc(wines.appellation));
+
+    return result.map((r) => r.appellation).filter(Boolean) as string[];
+}
+
+export async function getUniqueCepages() {
+    const result = await db
+        .selectDistinct({ cepage: wines.cepage })
+        .from(wines)
+        .where(sql`${wines.cepage} IS NOT NULL AND ${wines.cepage} != ''`)
+        .orderBy(asc(wines.cepage));
+
+    return result.map((r) => r.cepage).filter(Boolean) as string[];
+}
+
+export async function getUniqueLieuxAchat() {
+    const result = await db
+        .selectDistinct({ lieuAchat: wines.lieuAchat })
+        .from(wines)
+        .where(sql`${wines.lieuAchat} IS NOT NULL AND ${wines.lieuAchat} != ''`)
+        .orderBy(asc(wines.lieuAchat));
+
+    return result.map((r) => r.lieuAchat).filter(Boolean) as string[];
+}
+
+export async function getUniqueMillesimes() {
+    const result = await db
+        .selectDistinct({ millesime: wines.millesime })
+        .from(wines)
+        .where(sql`${wines.millesime} IS NOT NULL`)
+        .orderBy(desc(wines.millesime));
+
+    return result.map((r) => r.millesime).filter(Boolean) as number[];
 }
 
 export async function getDistributionByRegion() {

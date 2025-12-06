@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Wine, Calendar, MapPin, Tag, ArrowLeft, Star } from "lucide-react";
+import { Wine, Calendar, MapPin, Tag, ArrowLeft, Star, Grape, Euro, ShoppingBag, BookOpen } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -29,15 +29,15 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
     const currentYear = new Date().getFullYear();
     const getDrinkWindowStatus = () => {
         if (!wine.debutApogee && !wine.finApogee) return null;
-        if (wine.finApogee && currentYear > wine.finApogee) return { label: "Past Peak", color: "text-red-400", bg: "bg-red-400/10" };
-        if (wine.debutApogee && currentYear < wine.debutApogee) return { label: "Keep", color: "text-blue-400", bg: "bg-blue-400/10" };
-        return { label: "Drink Now", color: "text-green-400", bg: "bg-green-400/10" };
+        if (wine.finApogee && currentYear > wine.finApogee) return { label: "Passé", color: "text-red-400", bg: "bg-red-400/10" };
+        if (wine.debutApogee && currentYear < wine.debutApogee) return { label: "À garder", color: "text-blue-400", bg: "bg-blue-400/10" };
+        return { label: "À boire", color: "text-green-400", bg: "bg-green-400/10" };
     };
 
     const drinkStatus = getDrinkWindowStatus();
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen pb-8">
             {/* Header */}
             <div className="relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-background to-background" />
@@ -46,7 +46,7 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
                     <Link href="/cellar">
                         <Button variant="ghost" size="sm" className="mb-4 -ml-2">
                             <ArrowLeft className="w-4 h-4 mr-1" />
-                            Back
+                            Retour
                         </Button>
                     </Link>
 
@@ -82,74 +82,102 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
                     finApogee={wine.finApogee}
                 />
 
-                {/* Details Card */}
+                {/* Wine Info Card */}
                 <GlassCard className="p-4">
-                    <h2 className="font-semibold mb-3">Details</h2>
-                    <div className="space-y-3">
+                    <h2 className="font-semibold mb-3">Caractéristiques</h2>
+                    <div className="grid grid-cols-2 gap-3">
                         {wine.region && (
-                            <div className="flex items-center gap-3">
-                                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <div className="flex items-start gap-2">
+                                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Region</p>
-                                    <p>{wine.region}</p>
+                                    <p className="text-xs text-muted-foreground">Région</p>
+                                    <p className="text-sm font-medium">{wine.region}</p>
                                 </div>
                             </div>
                         )}
                         {wine.appellation && (
-                            <div className="flex items-center gap-3">
-                                <Tag className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <div className="flex items-start gap-2">
+                                <Tag className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Appellation</p>
-                                    <p>{wine.appellation}</p>
+                                    <p className="text-xs text-muted-foreground">Appellation</p>
+                                    <p className="text-sm font-medium">{wine.appellation}</p>
                                 </div>
                             </div>
                         )}
                         {wine.cru && (
-                            <div className="flex items-center gap-3">
-                                <Star className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <div className="flex items-start gap-2">
+                                <Star className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Cru</p>
-                                    <p>{wine.cru}</p>
+                                    <p className="text-xs text-muted-foreground">Cru</p>
+                                    <p className="text-sm font-medium">{wine.cru}</p>
                                 </div>
                             </div>
                         )}
                         {wine.cepage && (
-                            <div className="flex items-center gap-3">
-                                <Wine className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <div className="flex items-start gap-2">
+                                <Grape className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Grape Varieties</p>
-                                    <p>{wine.cepage}</p>
+                                    <p className="text-xs text-muted-foreground">Cépage</p>
+                                    <p className="text-sm font-medium">{wine.cepage}</p>
                                 </div>
                             </div>
                         )}
-                        {wine.prixAchat && (
-                            <div className="flex items-center gap-3">
-                                <Tag className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        {wine.note && (
+                            <div className="flex items-start gap-2">
+                                <BookOpen className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p className="text-sm text-muted-foreground">Purchase Price</p>
-                                    <p>€{wine.prixAchat}</p>
-                                </div>
-                            </div>
-                        )}
-                        {wine.lieuAchat && (
-                            <div className="flex items-center gap-3">
-                                <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Purchased at</p>
-                                    <p>{wine.lieuAchat}</p>
-                                </div>
-                            </div>
-                        )}
-                        {wine.dateAchat && (
-                            <div className="flex items-center gap-3">
-                                <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Purchase Date</p>
-                                    <p>{new Date(wine.dateAchat).toLocaleDateString("fr-FR")}</p>
+                                    <p className="text-xs text-muted-foreground">Note guide</p>
+                                    <p className="text-sm font-medium">{wine.note}</p>
                                 </div>
                             </div>
                         )}
                     </div>
+                </GlassCard>
+
+                {/* Purchase Info Card */}
+                <GlassCard className="p-4">
+                    <h2 className="font-semibold mb-3">Achat</h2>
+                    <div className="grid grid-cols-2 gap-3">
+                        {wine.prixAchat && (
+                            <div className="flex items-start gap-2">
+                                <Euro className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Prix d'achat</p>
+                                    <p className="text-sm font-medium">{wine.prixAchat} €</p>
+                                </div>
+                            </div>
+                        )}
+                        {wine.caConnu && (
+                            <div className="flex items-start gap-2">
+                                <Euro className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Coût total connu</p>
+                                    <p className="text-sm font-medium">{wine.caConnu} €</p>
+                                </div>
+                            </div>
+                        )}
+                        {wine.lieuAchat && (
+                            <div className="flex items-start gap-2">
+                                <ShoppingBag className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Lieu d'achat</p>
+                                    <p className="text-sm font-medium">{wine.lieuAchat}</p>
+                                </div>
+                            </div>
+                        )}
+                        {wine.dateAchat && (
+                            <div className="flex items-start gap-2">
+                                <Calendar className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-xs text-muted-foreground">Date d'achat</p>
+                                    <p className="text-sm font-medium">{new Date(wine.dateAchat).toLocaleDateString("fr-FR")}</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    {!wine.prixAchat && !wine.lieuAchat && !wine.dateAchat && !wine.caConnu && (
+                        <p className="text-sm text-muted-foreground">Aucune information d'achat</p>
+                    )}
                 </GlassCard>
 
                 {/* Tasting Notes Section */}
