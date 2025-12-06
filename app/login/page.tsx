@@ -6,8 +6,11 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { login } from "@/app/actions/auth-actions";
+import { useTheme } from "@/components/theme/theme-provider";
+import { cn } from "@/lib/utils";
 
 export default function LoginPage() {
+    const { themeConfig } = useTheme();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -39,20 +42,20 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center p-4">
             {/* Background effects */}
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-background to-background" />
-            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl" />
+            <div className={cn("absolute inset-0 bg-gradient-to-br", themeConfig.gradient)} />
+            <div className={cn("absolute top-0 right-0 w-64 h-64 rounded-full blur-3xl", themeConfig.glowBg1)} />
+            <div className={cn("absolute bottom-0 left-0 w-48 h-48 rounded-full blur-3xl", themeConfig.glowBg2)} />
 
             <div className="relative w-full max-w-md">
                 <GlassCard className="p-8">
                     {/* Logo/Header */}
                     <div className="flex flex-col items-center mb-8">
-                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center mb-4">
-                            <Wine className="w-8 h-8 text-purple-400" />
+                        <div className={cn("w-16 h-16 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-4", themeConfig.accent1)}>
+                            <Wine className={cn("w-8 h-8", themeConfig.icon)} />
                         </div>
                         <h1
-                            className="text-3xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent"
-                            style={{ textShadow: '0 0 40px rgba(139, 92, 246, 0.3)' }}
+                            className={cn("text-3xl font-bold bg-gradient-to-r bg-clip-text text-transparent", themeConfig.primary)}
+                            style={{ textShadow: `0 0 40px ${themeConfig.glow}` }}
                         >
                             Tanin
                         </h1>
@@ -102,7 +105,7 @@ export default function LoginPage() {
                         <Button
                             type="submit"
                             disabled={isPending}
-                            className="w-full h-11 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                            className={cn("w-full h-11 bg-gradient-to-r", themeConfig.accent2, `hover:${themeConfig.accentHover}`)}
                         >
                             {isPending ? (
                                 <>
