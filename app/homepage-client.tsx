@@ -1,15 +1,24 @@
 "use client";
 
-import { MapPin, Tag, Grape, ChevronRight, Sparkles, Wine, TrendingUp, Clock } from "lucide-react";
+import { ChevronRight, Sparkles, Wine, TrendingUp, Clock } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { GlassCard } from "@/components/ui/glass-card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, Label, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { useTheme } from "@/components/theme/theme-provider";
+
+// Dynamically import chart components to reduce initial bundle size
+const MaturityChart = dynamic(() => import("@/components/charts/maturity-chart").then(mod => ({ default: mod.MaturityChart })), {
+    ssr: false,
+    loading: () => <div className="px-5 mt-6"><GlassCard className="p-4"><div className="h-32 w-full animate-pulse bg-muted/20 rounded" /></GlassCard></div>
+});
+
+const DistributionCharts = dynamic(() => import("@/components/charts/distribution-charts").then(mod => ({ default: mod.DistributionCharts })), {
+    ssr: false,
+    loading: () => <div className="px-5 mt-6 space-y-4"><div className="h-[600px] animate-pulse bg-muted/20 rounded" /></div>
+});
 
 // Types
 interface WineSuggestion {
@@ -56,29 +65,7 @@ interface HomepageClientProps {
     userName?: string;
 }
 
-// Chart Configs
-const maturityChartConfig = {
-    keep: { label: "À Garder", color: "hsl(217, 91%, 60%)" },
-    drink: { label: "À Boire", color: "hsl(142, 71%, 45%)" },
-    drinkWait: { label: "À Boire / Attendre", color: "hsl(45, 93%, 47%)" },
-    old: { label: "Passé", color: "hsl(25, 95%, 53%)" },
-} satisfies ChartConfig;
-
-const regionChartConfig = {
-    count: { label: "Bouteilles", color: "hsl(262, 83%, 58%)" },
-} satisfies ChartConfig;
-
-const appellationChartConfig = {
-    count: { label: "Bouteilles", color: "hsl(330, 81%, 60%)" },
-} satisfies ChartConfig;
-
-const cepageChartConfig = {
-    count: { label: "Bouteilles", color: "hsl(187, 85%, 53%)" },
-} satisfies ChartConfig;
-
-const vintageChartConfig = {
-    count: { label: "Bouteilles", color: "hsl(262, 83%, 58%)" },
-} satisfies ChartConfig;
+// Chart configs moved to chart components
 
 // Animation variants
 const containerVariants = {
@@ -104,18 +91,7 @@ export default function HomepageClient({
     byCepage,
     userName,
 }: HomepageClientProps) {
-    const router = useRouter();
     const { themeConfig } = useTheme();
-    const sortedVintages = [...vintages].sort((a, b) => a.year - b.year);
-
-    const maturityData = [
-        { name: "keep", value: maturity.keep, fill: "hsl(217, 91%, 60%)" },
-        { name: "drink", value: maturity.drink, fill: "hsl(142, 71%, 45%)" },
-        { name: "drinkWait", value: maturity.drinkWait, fill: "hsl(45, 93%, 47%)" },
-        { name: "old", value: maturity.old, fill: "hsl(25, 95%, 53%)" },
-    ];
-
-    const totalMaturity = maturity.keep + maturity.drink + maturity.drinkWait + maturity.old;
 
     return (
         <motion.div
@@ -228,248 +204,19 @@ export default function HomepageClient({
                 </motion.div>
             )}
 
-            {/* Maturity Chart */}
-            <motion.div variants={itemVariants} className="px-5 mt-6">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Maturité</h2>
-
-                <GlassCard className="p-4">
-                    <div className="flex items-center gap-4">
-                        <ChartContainer config={maturityChartConfig} className="w-32 h-32">
-                            <PieChart>
-                                <Pie
-                                    data={maturityData}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    innerRadius={35}
-                                    outerRadius={50}
-                                    strokeWidth={2}
-                                    stroke="hsl(var(--background))"
-                                >
-                                    {maturityData.map((entry, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={entry.fill}
-                                            className="cursor-pointer"
-                                            onClick={() => {
-                                                const maturityMap: Record<string, string> = {
-                                                    'keep': 'keep',
-                                                    'drink': 'drink',
-                                                    'drinkWait': 'drinkWait',
-                                                    'old': 'old'
-                                                };
-                                                const maturity = maturityMap[entry.name];
-                                                if (maturity) {
-                                                    router.push(`/cellar?maturity=${maturity}`);
-                                                }
-                                            }}
-                                        />
-                                    ))}
-                                    <Label
-                                        content={({ viewBox }) => {
-                                            if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                                                return (
-                                                    <text x={viewBox.cx} y={viewBox.cy} textAnchor="middle" dominantBaseline="middle">
-                                                        <tspan x={viewBox.cx} y={viewBox.cy} className="fill-foreground text-xl font-bold">
-                                                            {totalMaturity}
-                                                        </tspan>
-                                                    </text>
-                                                );
-                                            }
-                                        }}
-                                    />
-                                </Pie>
-                            </PieChart>
-                        </ChartContainer>
-
-                        <div className="flex-1 space-y-2">
-                            <Link href="/cellar?maturity=keep">
-                                <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                                        <span className="text-sm">À Garder</span>
-                                    </div>
-                                    <span className="font-semibold">{maturity.keep}</span>
-                                </div>
-                            </Link>
-                            <Link href="/cellar?maturity=drink">
-                                <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                                        <span className="text-sm">À Boire</span>
-                                    </div>
-                                    <span className="font-semibold">{maturity.drink}</span>
-                                </div>
-                            </Link>
-                            <Link href="/cellar?maturity=drinkWait">
-                                <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "hsl(45, 93%, 47%)" }} />
-                                        <span className="text-sm">À Boire / Attendre</span>
-                                    </div>
-                                    <span className="font-semibold">{maturity.drinkWait}</span>
-                                </div>
-                            </Link>
-                            <Link href="/cellar?maturity=old">
-                                <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                                        <span className="text-sm">Passé</span>
-                                    </div>
-                                    <span className="font-semibold">{maturity.old}</span>
-                                </div>
-                            </Link>
-                        </div>
-                    </div>
-                </GlassCard>
+            {/* Maturity Chart - Dynamically loaded */}
+            <motion.div variants={itemVariants}>
+                <MaturityChart maturity={maturity} />
             </motion.div>
 
-            {/* Vintage Distribution */}
-            <motion.div variants={itemVariants} className="px-5 mt-6">
-                <Link href="/distribution/vintages">
-                    <div className="flex items-center gap-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity">
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Millésimes</h2>
-                        {vintages.length > 5 && (
-                            <span className="text-xs text-muted-foreground ml-auto">
-                                {vintages.length} au total
-                            </span>
-                        )}
-                    </div>
-                </Link>
-
-                <GlassCard className="p-4">
-                    <ChartContainer config={vintageChartConfig} className="h-40 w-full">
-                        <BarChart data={sortedVintages} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                            <XAxis
-                                dataKey="year"
-                                tickLine={false}
-                                axisLine={false}
-                                tickMargin={8}
-                                fontSize={10}
-                                tickFormatter={(value) => `'${String(value).slice(-2)}`}
-                            />
-                            <ChartTooltip content={<ChartTooltipContent />} />
-                            <Bar
-                                dataKey="count"
-                                fill="var(--color-count)"
-                                radius={[4, 4, 0, 0]}
-                                className="cursor-pointer"
-                                onClick={(data) => {
-                                    if (data && data.year) {
-                                        router.push(`/cellar?millesime=${data.year}`);
-                                    }
-                                }}
-                            />
-                        </BarChart>
-                    </ChartContainer>
-                </GlassCard>
-            </motion.div>
-
-            {/* Distribution Charts */}
-            <motion.div variants={itemVariants} className="px-5 mt-6 space-y-4">
-                {/* Regions */}
-                <div>
-                    <Link href="/distribution/regions">
-                        <div className="flex items-center gap-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity">
-                            <MapPin className="w-4 h-4 text-purple-400" />
-                            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Régions</h2>
-                            {byRegion.length > 5 && (
-                                <span className="text-xs text-muted-foreground ml-auto">
-                                    {byRegion.length} au total
-                                </span>
-                            )}
-                        </div>
-                    </Link>
-                    <GlassCard className="p-4">
-                        <ChartContainer config={regionChartConfig} className="h-[180px] w-full !aspect-auto">
-                            <BarChart data={byRegion.slice(0, 5)} layout="vertical" margin={{ left: 80, right: 20 }}>
-                                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={80} fontSize={11} />
-                                <XAxis type="number" hide />
-                                <ChartTooltip content={<ChartTooltipContent />} />
-                                <Bar
-                                    dataKey="count"
-                                    fill="var(--color-count)"
-                                    radius={[0, 4, 4, 0]}
-                                    className="cursor-pointer"
-                                    onClick={(data) => {
-                                        if (data && data.name) {
-                                            router.push(`/cellar?region=${encodeURIComponent(data.name)}`);
-                                        }
-                                    }}
-                                />
-                            </BarChart>
-                        </ChartContainer>
-                    </GlassCard>
-                </div>
-
-                {/* Appellations */}
-                <div>
-                    <Link href="/distribution/appellations">
-                        <div className="flex items-center gap-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity">
-                            <Tag className="w-4 h-4 text-pink-400" />
-                            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Appellations</h2>
-                            {byAppellation.length > 5 && (
-                                <span className="text-xs text-muted-foreground ml-auto">
-                                    {byAppellation.length} au total
-                                </span>
-                            )}
-                        </div>
-                    </Link>
-                    <GlassCard className="p-4">
-                        <ChartContainer config={appellationChartConfig} className="h-[180px] w-full !aspect-auto">
-                            <BarChart data={byAppellation.slice(0, 5)} layout="vertical" margin={{ left: 90, right: 20 }}>
-                                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={90} fontSize={11} />
-                                <XAxis type="number" hide />
-                                <ChartTooltip content={<ChartTooltipContent />} />
-                                <Bar
-                                    dataKey="count"
-                                    fill="var(--color-count)"
-                                    radius={[0, 4, 4, 0]}
-                                    className="cursor-pointer"
-                                    onClick={(data) => {
-                                        if (data && data.name) {
-                                            router.push(`/cellar?appellation=${encodeURIComponent(data.name)}`);
-                                        }
-                                    }}
-                                />
-                            </BarChart>
-                        </ChartContainer>
-                    </GlassCard>
-                </div>
-
-                {/* Cépages */}
-                <div className="pb-8">
-                    <Link href="/distribution/cepages">
-                        <div className="flex items-center gap-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity">
-                            <Grape className="w-4 h-4 text-cyan-400" />
-                            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Cépages</h2>
-                            {byCepage.length > 5 && (
-                                <span className="text-xs text-muted-foreground ml-auto">
-                                    {byCepage.length} au total
-                                </span>
-                            )}
-                        </div>
-                    </Link>
-                    <GlassCard className="p-4">
-                        <ChartContainer config={cepageChartConfig} className="h-[180px] w-full !aspect-auto">
-                            <BarChart data={byCepage.slice(0, 5)} layout="vertical" margin={{ left: 80, right: 20 }}>
-                                <YAxis dataKey="name" type="category" tickLine={false} axisLine={false} width={80} fontSize={11} />
-                                <XAxis type="number" hide />
-                                <ChartTooltip content={<ChartTooltipContent />} />
-                                <Bar
-                                    dataKey="count"
-                                    fill="var(--color-count)"
-                                    radius={[0, 4, 4, 0]}
-                                    className="cursor-pointer"
-                                    onClick={(data) => {
-                                        if (data && data.name) {
-                                            router.push(`/cellar?cepage=${encodeURIComponent(data.name)}`);
-                                        }
-                                    }}
-                                />
-                            </BarChart>
-                        </ChartContainer>
-                    </GlassCard>
-                </div>
+            {/* Distribution Charts - Dynamically loaded */}
+            <motion.div variants={itemVariants}>
+                <DistributionCharts
+                    vintages={vintages}
+                    byRegion={byRegion}
+                    byAppellation={byAppellation}
+                    byCepage={byCepage}
+                />
             </motion.div>
         </motion.div>
     );
