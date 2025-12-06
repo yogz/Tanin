@@ -247,7 +247,7 @@ export default function HomepageClient({
                                 className="cursor-pointer"
                                 onClick={(data) => {
                                     if (data && data.year) {
-                                        router.push(`/cellar?search=${data.year}`);
+                                        router.push(`/cellar?millesime=${data.year}`);
                                     }
                                 }}
                             />
