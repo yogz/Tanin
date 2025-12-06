@@ -233,7 +233,22 @@ export default function HomepageClient({
                                     stroke="hsl(var(--background))"
                                 >
                                     {maturityData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={entry.fill}
+                                            className="cursor-pointer"
+                                            onClick={() => {
+                                                const maturityMap: Record<string, string> = {
+                                                    'keep': 'keep',
+                                                    'peak': 'peak',
+                                                    'old': 'old'
+                                                };
+                                                const maturity = maturityMap[entry.name];
+                                                if (maturity) {
+                                                    router.push(`/cellar?maturity=${maturity}`);
+                                                }
+                                            }}
+                                        />
                                     ))}
                                     <Label
                                         content={({ viewBox }) => {
@@ -253,27 +268,33 @@ export default function HomepageClient({
                         </ChartContainer>
 
                         <div className="flex-1 space-y-3">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                                    <span className="text-sm">À Garder</span>
+                            <Link href="/cellar?maturity=keep">
+                                <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                                        <span className="text-sm">À Garder</span>
+                                    </div>
+                                    <span className="font-semibold">{maturity.keep}</span>
                                 </div>
-                                <span className="font-semibold">{maturity.keep}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                                    <span className="text-sm">À Boire</span>
+                            </Link>
+                            <Link href="/cellar?maturity=peak">
+                                <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                                        <span className="text-sm">À Boire</span>
+                                    </div>
+                                    <span className="font-semibold">{maturity.peak}</span>
                                 </div>
-                                <span className="font-semibold">{maturity.peak}</span>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                                    <span className="text-sm">Passé</span>
+                            </Link>
+                            <Link href="/cellar?maturity=old">
+                                <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+                                        <span className="text-sm">Passé</span>
+                                    </div>
+                                    <span className="font-semibold">{maturity.old}</span>
                                 </div>
-                                <span className="font-semibold">{maturity.old}</span>
-                            </div>
+                            </Link>
                         </div>
                     </div>
                 </GlassCard>
