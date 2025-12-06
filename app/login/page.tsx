@@ -26,7 +26,11 @@ export default function LoginPage() {
                 setIsPending(false);
             }
             // If success, the redirect will happen from the server action
-        } catch (err) {
+        } catch (err: any) {
+            // Ignore Next.js redirect errors (they're expected for successful logins)
+            if (err?.digest?.startsWith("NEXT_REDIRECT")) {
+                return;
+            }
             setError("Une erreur s'est produite");
             setIsPending(false);
         }
