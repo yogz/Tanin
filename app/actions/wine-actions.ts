@@ -351,7 +351,7 @@ export async function getDistributionByRegion(limit?: number) {
             count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)`,
         })
         .from(wines)
-        .where(sql`${wines.region} IS NOT NULL AND ${wines.region} != ''`)
+        .where(sql`${wines.region} IS NOT NULL AND ${wines.region} != '' AND ${wines.nombre} > 0`)
         .groupBy(wines.region)
         .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`));
     
@@ -370,7 +370,7 @@ export async function getDistributionByAppellation(limit?: number) {
             count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)`,
         })
         .from(wines)
-        .where(sql`${wines.appellation} IS NOT NULL AND ${wines.appellation} != ''`)
+        .where(sql`${wines.appellation} IS NOT NULL AND ${wines.appellation} != '' AND ${wines.nombre} > 0`)
         .groupBy(wines.appellation)
         .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`));
     
@@ -389,7 +389,7 @@ export async function getDistributionByCepage(limit?: number) {
             count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)`,
         })
         .from(wines)
-        .where(sql`${wines.cepage} IS NOT NULL AND ${wines.cepage} != ''`)
+        .where(sql`${wines.cepage} IS NOT NULL AND ${wines.cepage} != '' AND ${wines.nombre} > 0`)
         .groupBy(wines.cepage)
         .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`));
     
