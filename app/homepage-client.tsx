@@ -28,7 +28,8 @@ interface Stats {
 
 interface Maturity {
     keep: number;
-    peak: number;
+    drink: number;
+    drinkWait: number;
     old: number;
 }
 
@@ -55,7 +56,8 @@ interface HomepageClientProps {
 // Chart Configs
 const maturityChartConfig = {
     keep: { label: "À Garder", color: "hsl(217, 91%, 60%)" },
-    peak: { label: "À Boire", color: "hsl(142, 71%, 45%)" },
+    drink: { label: "À Boire", color: "hsl(142, 71%, 45%)" },
+    drinkWait: { label: "À Boire / Attendre", color: "hsl(45, 93%, 47%)" },
     old: { label: "Passé", color: "hsl(25, 95%, 53%)" },
 } satisfies ChartConfig;
 
@@ -103,11 +105,12 @@ export default function HomepageClient({
 
     const maturityData = [
         { name: "keep", value: maturity.keep, fill: "hsl(217, 91%, 60%)" },
-        { name: "peak", value: maturity.peak, fill: "hsl(142, 71%, 45%)" },
+        { name: "drink", value: maturity.drink, fill: "hsl(142, 71%, 45%)" },
+        { name: "drinkWait", value: maturity.drinkWait, fill: "hsl(45, 93%, 47%)" },
         { name: "old", value: maturity.old, fill: "hsl(25, 95%, 53%)" },
     ];
 
-    const totalMaturity = maturity.keep + maturity.peak + maturity.old;
+    const totalMaturity = maturity.keep + maturity.drink + maturity.drinkWait + maturity.old;
 
     return (
         <motion.div
@@ -153,12 +156,12 @@ export default function HomepageClient({
                         </GlassCard>
                     </Link>
 
-                    <Link href="/cellar?maturity=peak">
+                    <Link href="/cellar?maturity=drink">
                         <GlassCard className="p-4 text-center hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer">
                             <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-green-500/20 flex items-center justify-center">
                                 <Clock className="w-5 h-5 text-green-400" />
                             </div>
-                            <p className="text-2xl font-bold">{maturity.peak}</p>
+                            <p className="text-2xl font-bold">{maturity.drink}</p>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">À Boire</p>
                         </GlassCard>
                     </Link>
@@ -237,14 +240,15 @@ export default function HomepageClient({
                                     stroke="hsl(var(--background))"
                                 >
                                     {maturityData.map((entry, index) => (
-                                        <Cell 
-                                            key={`cell-${index}`} 
+                                        <Cell
+                                            key={`cell-${index}`}
                                             fill={entry.fill}
                                             className="cursor-pointer"
                                             onClick={() => {
                                                 const maturityMap: Record<string, string> = {
                                                     'keep': 'keep',
-                                                    'peak': 'peak',
+                                                    'drink': 'drink',
+                                                    'drinkWait': 'drinkWait',
                                                     'old': 'old'
                                                 };
                                                 const maturity = maturityMap[entry.name];
@@ -271,7 +275,7 @@ export default function HomepageClient({
                             </PieChart>
                         </ChartContainer>
 
-                        <div className="flex-1 space-y-3">
+                        <div className="flex-1 space-y-2">
                             <Link href="/cellar?maturity=keep">
                                 <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
                                     <div className="flex items-center gap-2">
@@ -281,13 +285,22 @@ export default function HomepageClient({
                                     <span className="font-semibold">{maturity.keep}</span>
                                 </div>
                             </Link>
-                            <Link href="/cellar?maturity=peak">
+                            <Link href="/cellar?maturity=drink">
                                 <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
                                     <div className="flex items-center gap-2">
                                         <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
                                         <span className="text-sm">À Boire</span>
                                     </div>
-                                    <span className="font-semibold">{maturity.peak}</span>
+                                    <span className="font-semibold">{maturity.drink}</span>
+                                </div>
+                            </Link>
+                            <Link href="/cellar?maturity=drinkWait">
+                                <div className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity p-2 -m-2 rounded-lg">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: "hsl(45, 93%, 47%)" }} />
+                                        <span className="text-sm">À Boire / Attendre</span>
+                                    </div>
+                                    <span className="font-semibold">{maturity.drinkWait}</span>
                                 </div>
                             </Link>
                             <Link href="/cellar?maturity=old">
