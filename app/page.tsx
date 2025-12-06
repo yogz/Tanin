@@ -7,6 +7,7 @@ import {
   getMaturityProfile,
   getVintageDistribution
 } from "@/app/actions/wine-actions";
+import { getSession } from "@/lib/auth";
 import HomepageClient from "./homepage-client";
 
 // Force dynamic rendering to avoid too many DB connections at build time
@@ -21,6 +22,7 @@ export default async function DashboardPage() {
   const byRegion = await getDistributionByRegion(10);
   const byAppellation = await getDistributionByAppellation(10);
   const byCepage = await getDistributionByCepage(10);
+  const session = await getSession();
 
   const suggestions = winesSuggestions.slice(0, 3);
 
@@ -33,6 +35,7 @@ export default async function DashboardPage() {
       byRegion={byRegion}
       byAppellation={byAppellation}
       byCepage={byCepage}
+      userName={session?.name}
     />
   );
 }
