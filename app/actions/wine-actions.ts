@@ -540,6 +540,25 @@ export async function getVintageDistribution() {
     return result.map(r => ({ year: r.year || 0, count: Number(r.count) }));
 }
 
+export async function getDistributionByVintage(limit?: number) {
+    let query = db
+        .select({
+            year: wines.millesime,
+            count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)`,
+        })
+        .from(wines)
+        .where(sql`${wines.millesime} IS NOT NULL AND ${wines.nombre} > 0`)
+        .groupBy(wines.millesime)
+        .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`));
+    
+    if (limit !== undefined) {
+        query = query.limit(limit) as any;
+    }
+
+    const result = await query;
+    return result.map((r) => ({ name: String(r.year || 0), count: Number(r.count) }));
+}
+
 export async function getConsumptionByMonth(months: number = 12) {
     // Get the start date (months ago)
     const startDate = new Date();

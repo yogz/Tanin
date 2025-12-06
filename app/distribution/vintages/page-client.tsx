@@ -4,47 +4,46 @@ import { useState, useMemo } from "react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
-import { MapPin, ArrowLeft, Search, X } from "lucide-react";
+import { Calendar, ArrowLeft, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { BarChart, Bar, XAxis, YAxis } from "recharts";
 
-const regionChartConfig = {
+const vintageChartConfig = {
     count: { label: "Bouteilles", color: "hsl(262, 83%, 58%)" },
 } satisfies ChartConfig;
 
-export default function RegionsDistributionClient({ byRegion }: { byRegion: Array<{ name: string; count: number }> }) {
+export default function VintagesDistributionClient({ byVintage }: { byVintage: Array<{ name: string; count: number }> }) {
     const router = useRouter();
     const [search, setSearch] = useState("");
     const [viewMode, setViewMode] = useState<"chart" | "list">("list");
 
     const filteredData = useMemo(() => {
-        if (!search) return byRegion;
-        const lowerSearch = search.toLowerCase();
-        return byRegion.filter(item => 
-            item.name.toLowerCase().includes(lowerSearch)
+        if (!search) return byVintage;
+        const searchNum = parseInt(search);
+        if (!isNaN(searchNum)) {
+            return byVintage.filter(item => item.name.includes(search));
+        }
+        return byVintage.filter(item => 
+            item.name.toLowerCase().includes(search.toLowerCase())
         );
-    }, [search, byRegion]);
+    }, [search, byVintage]);
 
-    // Group by first letter for list view
-    const groupedData = useMemo(() => {
-        const groups: Record<string, Array<{ name: string; count: number }>> = {};
-        filteredData.forEach(item => {
-            const firstLetter = item.name.charAt(0).toUpperCase();
-            if (!groups[firstLetter]) {
-                groups[firstLetter] = [];
-            }
-            groups[firstLetter].push(item);
+    // Sort by year (descending) for list view
+    const sortedData = useMemo(() => {
+        return [...filteredData].sort((a, b) => {
+            const yearA = parseInt(a.name);
+            const yearB = parseInt(b.name);
+            return yearB - yearA; // Descending order
         });
-        return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b));
     }, [filteredData]);
 
     return (
         <div className="min-h-screen">
             {/* Header */}
             <div className="relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-background to-background" />
-                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
+                <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/40 via-background to-background" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl" />
                 
                 <div className="relative px-5 pt-14 pb-6">
                     <Link 
@@ -56,13 +55,13 @@ export default function RegionsDistributionClient({ byRegion }: { byRegion: Arra
                     </Link>
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                                <MapPin className="w-6 h-6 text-purple-400" />
+                            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 flex items-center justify-center">
+                                <Calendar className="w-6 h-6 text-indigo-400" />
                             </div>
                             <div>
-                                <h1 className="text-2xl font-bold">Régions</h1>
+                                <h1 className="text-2xl font-bold">Millésimes</h1>
                                 <p className="text-sm text-muted-foreground">
-                                    {filteredData.length} {filteredData.length === byRegion.length ? 'régions' : `sur ${byRegion.length}`}
+                                    {filteredData.length} {filteredData.length === byVintage.length ? 'millésimes' : `sur ${byVintage.length}`}
                                 </p>
                             </div>
                         </div>
@@ -71,7 +70,7 @@ export default function RegionsDistributionClient({ byRegion }: { byRegion: Arra
                                 onClick={() => setViewMode("list")}
                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                                     viewMode === "list" 
-                                        ? "bg-purple-500/20 text-purple-400" 
+                                        ? "bg-indigo-500/20 text-indigo-400" 
                                         : "bg-muted/50 text-muted-foreground hover:bg-muted"
                                 }`}
                             >
@@ -81,7 +80,7 @@ export default function RegionsDistributionClient({ byRegion }: { byRegion: Arra
                                 onClick={() => setViewMode("chart")}
                                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                                     viewMode === "chart" 
-                                        ? "bg-purple-500/20 text-purple-400" 
+                                        ? "bg-indigo-500/20 text-indigo-400" 
                                         : "bg-muted/50 text-muted-foreground hover:bg-muted"
                                 }`}
                             >
@@ -95,7 +94,7 @@ export default function RegionsDistributionClient({ byRegion }: { byRegion: Arra
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                         <Input
                             type="search"
-                            placeholder="Rechercher une région..."
+                            placeholder="Rechercher un millésime..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="pl-10 pr-10 h-11 bg-background/50 border-border/50 rounded-xl"
@@ -116,14 +115,14 @@ export default function RegionsDistributionClient({ byRegion }: { byRegion: Arra
             <div className="px-5 mt-6 pb-8">
                 {viewMode === "chart" ? (
                     <GlassCard className="p-4">
-                        <ChartContainer config={regionChartConfig} className="h-[600px] w-full !aspect-auto">
-                            <BarChart data={filteredData} layout="vertical" margin={{ left: 120, right: 20 }}>
+                        <ChartContainer config={vintageChartConfig} className="h-[600px] w-full !aspect-auto">
+                            <BarChart data={filteredData.sort((a, b) => parseInt(a.name) - parseInt(b.name))} layout="vertical" margin={{ left: 80, right: 20 }}>
                                 <YAxis 
                                     dataKey="name" 
                                     type="category" 
                                     tickLine={false} 
                                     axisLine={false} 
-                                    width={120} 
+                                    width={80} 
                                     fontSize={12}
                                 />
                                 <XAxis type="number" hide />
@@ -135,7 +134,7 @@ export default function RegionsDistributionClient({ byRegion }: { byRegion: Arra
                                     className="cursor-pointer"
                                     onClick={(data) => {
                                         if (data && data.name) {
-                                            router.push(`/cellar?region=${encodeURIComponent(data.name)}`);
+                                            router.push(`/cellar?millesime=${data.name}`);
                                         }
                                     }}
                                 />
@@ -143,35 +142,28 @@ export default function RegionsDistributionClient({ byRegion }: { byRegion: Arra
                         </ChartContainer>
                     </GlassCard>
                 ) : (
-                    <div className="space-y-6 max-h-[calc(100vh-280px)] overflow-y-auto">
-                        {groupedData.length === 0 ? (
+                    <div className="space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto">
+                        {sortedData.length === 0 ? (
                             <GlassCard className="p-8 text-center">
-                                <p className="text-muted-foreground">Aucune région trouvée</p>
+                                <p className="text-muted-foreground">Aucun millésime trouvé</p>
                             </GlassCard>
                         ) : (
-                            groupedData.map(([letter, items]) => (
-                                <div key={letter} className="space-y-2">
-                                    <h2 className="text-lg font-bold text-foreground/80 px-2 sticky top-0 bg-background/80 backdrop-blur-sm py-2 -mt-2 z-10">
-                                        {letter}
-                                    </h2>
-                                    <div className="grid gap-2">
-                                        {items.map((item) => (
-                                            <GlassCard
-                                                key={item.name}
-                                                className="p-3 hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer"
-                                                onClick={() => router.push(`/cellar?region=${encodeURIComponent(item.name)}`)}
-                                            >
-                                                <div className="flex items-center justify-between">
-                                                    <span className="font-medium text-sm">{item.name}</span>
-                                                    <span className="text-xs font-semibold text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-full">
-                                                        {item.count} {item.count === 1 ? 'bouteille' : 'bouteilles'}
-                                                    </span>
-                                                </div>
-                                            </GlassCard>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))
+                            <div className="grid gap-2">
+                                {sortedData.map((item) => (
+                                    <GlassCard
+                                        key={item.name}
+                                        className="p-3 hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer"
+                                        onClick={() => router.push(`/cellar?millesime=${item.name}`)}
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <span className="font-medium text-sm">{item.name}</span>
+                                            <span className="text-xs font-semibold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-full">
+                                                {item.count} {item.count === 1 ? 'bouteille' : 'bouteilles'}
+                                            </span>
+                                        </div>
+                                    </GlassCard>
+                                ))}
+                            </div>
                         )}
                     </div>
                 )}
@@ -179,3 +171,4 @@ export default function RegionsDistributionClient({ byRegion }: { byRegion: Arra
         </div>
     );
 }
+

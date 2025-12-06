@@ -281,7 +281,16 @@ export default function HomepageClient({
 
             {/* Vintage Distribution */}
             <motion.div variants={itemVariants} className="px-5 mt-6">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Millésimes</h2>
+                <Link href="/distribution/vintages">
+                    <div className="flex items-center gap-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity">
+                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Millésimes</h2>
+                        {vintages.length > 5 && (
+                            <span className="text-xs text-muted-foreground ml-auto">
+                                {vintages.length} au total
+                            </span>
+                        )}
+                    </div>
+                </Link>
 
                 <GlassCard className="p-4">
                     <ChartContainer config={vintageChartConfig} className="h-40 w-full">
