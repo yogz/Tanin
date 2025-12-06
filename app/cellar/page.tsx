@@ -12,6 +12,7 @@ import {
 import { WineCard } from "@/components/features/wine/wine-card";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { CellarFilters } from "./cellar-filters";
 import { CellarTabs } from "./cellar-tabs";
 
@@ -63,13 +64,7 @@ async function WineList({
     });
 
     if (wines.length === 0) {
-        return (
-            <GlassCard className="p-8 text-center">
-                <p className="text-muted-foreground">
-                    {inStock ? "Aucun vin en cave" : "Aucun vin consommé"}
-                </p>
-            </GlassCard>
-        );
+        return <EmptyState type={inStock ? "no-results" : "no-consumed"} />;
     }
 
     return (

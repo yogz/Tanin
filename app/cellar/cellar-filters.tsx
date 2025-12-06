@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Search, Filter, X, Loader2, ChevronDown } from "lucide-react";
+import { Search, Filter, X, Loader2, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,18 @@ interface CellarFiltersProps {
     currentCepage?: string;
     currentLieuAchat?: string;
     currentMillesime?: string;
+}
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedValue(value), delay);
+        return () => clearTimeout(timer);
+    }, [value, delay]);
+
+    return debouncedValue;
 }
 
 export function CellarFilters({
@@ -46,7 +58,16 @@ export function CellarFilters({
     const [isPending, startTransition] = useTransition();
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
 
-    const updateFilters = (params: Record<string, string | undefined>) => {
+    const debouncedSearch = useDebounce(search, 300);
+
+    // Auto-search on debounced value change
+    useEffect(() => {
+        if (debouncedSearch !== currentSearch) {
+            updateFilters({ search: debouncedSearch || undefined });
+        }
+    }, [debouncedSearch]);
+
+    const updateFilters = useCallback((params: Record<string, string | undefined>) => {
         const url = new URL(window.location.href);
         Object.entries(params).forEach(([key, value]) => {
             if (value) {
@@ -58,24 +79,18 @@ export function CellarFilters({
         startTransition(() => {
             router.push(url.pathname + url.search);
         });
-    };
-
-    const handleSearch = () => {
-        updateFilters({ search: search || undefined });
-    };
+    }, [router]);
 
     const clearFilters = () => {
         setSearch("");
         startTransition(() => {
             const url = new URL(window.location.href);
-            // Keep only the tab parameter
             const tab = url.searchParams.get("tab");
             router.push(tab ? `/cellar?tab=${tab}` : "/cellar");
         });
     };
 
     const hasActiveFilters = currentSearch || currentType || currentRegion || currentAppellation || currentCepage || currentLieuAchat || currentMillesime;
-
     const activeFiltersCount = [currentType, currentRegion, currentAppellation, currentCepage, currentLieuAchat, currentMillesime].filter(Boolean).length;
 
     const toggleSection = (section: string) => {
@@ -88,7 +103,7 @@ export function CellarFilters({
         items,
         currentValue,
         paramName,
-        maxVisible = 8
+        maxVisible = 6
     }: {
         title: string;
         id: string;
@@ -102,118 +117,154 @@ export function CellarFilters({
         const hasMore = items.length > maxVisible;
 
         return (
-            <div>
-                <div className="flex items-center justify-between mb-2">
-                    <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-2"
+            >
+                <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{title}</p>
                     {hasMore && (
                         <button
                             onClick={() => toggleSection(id)}
-                            className="text-xs text-primary flex items-center gap-1"
+                            className="text-xs text-primary flex items-center gap-1 hover:underline"
                         >
                             {isExpanded ? "Moins" : `+${items.length - maxVisible}`}
-                            <ChevronDown className={cn("w-3 h-3 transition-transform", isExpanded && "rotate-180")} />
+                            <ChevronDown className={cn("w-3 h-3 transition-transform duration-200", isExpanded && "rotate-180")} />
                         </button>
                     )}
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                     {displayItems.map((item) => (
-                        <Badge
+                        <motion.button
                             key={String(item)}
-                            variant={currentValue === String(item) ? "default" : "outline"}
-                            className="cursor-pointer text-xs"
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => updateFilters({ [paramName]: currentValue === String(item) ? undefined : String(item) })}
+                            className={cn(
+                                "px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200",
+                                currentValue === String(item)
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                            )}
                         >
                             {item}
-                        </Badge>
+                        </motion.button>
                     ))}
                 </div>
-            </div>
+            </motion.div>
         );
     };
 
     return (
-        <>
+        <div className="space-y-3">
             {/* Search Bar */}
             <div className="flex gap-2">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                         type="search"
-                        placeholder="Rechercher..."
+                        placeholder="Rechercher un vin..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                        className="pl-9 bg-muted/50 border-0"
+                        className="pl-10 pr-10 h-11 bg-muted/50 border-0 rounded-xl text-base"
                     />
-                </div>
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleSearch}
-                    disabled={isPending}
-                >
-                    {isPending ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                        <Search className="w-4 h-4" />
+                    {(isPending || search !== debouncedSearch) && (
+                        <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground animate-spin" />
                     )}
-                </Button>
+                    {search && !isPending && search === debouncedSearch && (
+                        <button
+                            onClick={() => setSearch("")}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/30 transition-colors"
+                        >
+                            <X className="w-3 h-3" />
+                        </button>
+                    )}
+                </div>
                 <Button
                     variant={showFilters ? "default" : "outline"}
                     size="icon"
                     onClick={() => setShowFilters(!showFilters)}
-                    className="relative"
+                    className="relative h-11 w-11 rounded-xl shrink-0"
                 >
-                    <Filter className="w-4 h-4" />
+                    <SlidersHorizontal className="w-4 h-4" />
                     {activeFiltersCount > 0 && !showFilters && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center">
+                        <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center shadow-lg"
+                        >
                             {activeFiltersCount}
-                        </span>
+                        </motion.span>
                     )}
                 </Button>
             </div>
 
             {/* Active Filters Display */}
-            {hasActiveFilters && !showFilters && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                    {currentType && (
-                        <Badge variant="secondary" className="gap-1">
-                            {currentType}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ type: undefined })} />
-                        </Badge>
-                    )}
-                    {currentRegion && (
-                        <Badge variant="secondary" className="gap-1">
-                            {currentRegion}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ region: undefined })} />
-                        </Badge>
-                    )}
-                    {currentAppellation && (
-                        <Badge variant="secondary" className="gap-1">
-                            {currentAppellation}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ appellation: undefined })} />
-                        </Badge>
-                    )}
-                    {currentCepage && (
-                        <Badge variant="secondary" className="gap-1">
-                            {currentCepage}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ cepage: undefined })} />
-                        </Badge>
-                    )}
-                    {currentLieuAchat && (
-                        <Badge variant="secondary" className="gap-1">
-                            {currentLieuAchat}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ lieuAchat: undefined })} />
-                        </Badge>
-                    )}
-                    {currentMillesime && (
-                        <Badge variant="secondary" className="gap-1">
-                            {currentMillesime}
-                            <X className="w-3 h-3 cursor-pointer" onClick={() => updateFilters({ millesime: undefined })} />
-                        </Badge>
-                    )}
-                </div>
-            )}
+            <AnimatePresence>
+                {hasActiveFilters && !showFilters && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="flex flex-wrap gap-1.5 overflow-hidden"
+                    >
+                        {currentType && (
+                            <Badge variant="secondary" className="gap-1 pl-2 pr-1 py-1 rounded-full">
+                                {currentType}
+                                <button onClick={() => updateFilters({ type: undefined })} className="ml-1 hover:bg-foreground/10 rounded-full p-0.5">
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </Badge>
+                        )}
+                        {currentRegion && (
+                            <Badge variant="secondary" className="gap-1 pl-2 pr-1 py-1 rounded-full">
+                                {currentRegion}
+                                <button onClick={() => updateFilters({ region: undefined })} className="ml-1 hover:bg-foreground/10 rounded-full p-0.5">
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </Badge>
+                        )}
+                        {currentAppellation && (
+                            <Badge variant="secondary" className="gap-1 pl-2 pr-1 py-1 rounded-full">
+                                {currentAppellation}
+                                <button onClick={() => updateFilters({ appellation: undefined })} className="ml-1 hover:bg-foreground/10 rounded-full p-0.5">
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </Badge>
+                        )}
+                        {currentCepage && (
+                            <Badge variant="secondary" className="gap-1 pl-2 pr-1 py-1 rounded-full">
+                                {currentCepage}
+                                <button onClick={() => updateFilters({ cepage: undefined })} className="ml-1 hover:bg-foreground/10 rounded-full p-0.5">
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </Badge>
+                        )}
+                        {currentLieuAchat && (
+                            <Badge variant="secondary" className="gap-1 pl-2 pr-1 py-1 rounded-full">
+                                {currentLieuAchat}
+                                <button onClick={() => updateFilters({ lieuAchat: undefined })} className="ml-1 hover:bg-foreground/10 rounded-full p-0.5">
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </Badge>
+                        )}
+                        {currentMillesime && (
+                            <Badge variant="secondary" className="gap-1 pl-2 pr-1 py-1 rounded-full">
+                                {currentMillesime}
+                                <button onClick={() => updateFilters({ millesime: undefined })} className="ml-1 hover:bg-foreground/10 rounded-full p-0.5">
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </Badge>
+                        )}
+                        <button
+                            onClick={clearFilters}
+                            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2"
+                        >
+                            Tout effacer
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Filters Panel */}
             <AnimatePresence>
@@ -225,8 +276,7 @@ export function CellarFilters({
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                     >
-                        <div className="pt-4 space-y-4 max-h-[60vh] overflow-y-auto">
-                            {/* Type Filters */}
+                        <div className="pt-2 pb-4 space-y-5 max-h-[55vh] overflow-y-auto">
                             <FilterSection
                                 title="Type"
                                 id="type"
@@ -235,7 +285,6 @@ export function CellarFilters({
                                 paramName="type"
                             />
 
-                            {/* Region Filters */}
                             <FilterSection
                                 title="Région"
                                 id="region"
@@ -244,7 +293,6 @@ export function CellarFilters({
                                 paramName="region"
                             />
 
-                            {/* Appellation Filters */}
                             <FilterSection
                                 title="Appellation"
                                 id="appellation"
@@ -253,7 +301,6 @@ export function CellarFilters({
                                 paramName="appellation"
                             />
 
-                            {/* Cépage Filters */}
                             <FilterSection
                                 title="Cépage"
                                 id="cepage"
@@ -262,7 +309,6 @@ export function CellarFilters({
                                 paramName="cepage"
                             />
 
-                            {/* Lieu d'achat Filters */}
                             <FilterSection
                                 title="Lieu d'achat"
                                 id="lieuAchat"
@@ -271,33 +317,37 @@ export function CellarFilters({
                                 paramName="lieuAchat"
                             />
 
-                            {/* Millésime Filters */}
                             <FilterSection
                                 title="Millésime"
                                 id="millesime"
                                 items={millesimes}
                                 currentValue={currentMillesime}
                                 paramName="millesime"
-                                maxVisible={12}
+                                maxVisible={10}
                             />
 
-                            {/* Clear Filters */}
                             {hasActiveFilters && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={clearFilters}
-                                    className="text-muted-foreground"
-                                    disabled={isPending}
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="pt-2"
                                 >
-                                    <X className="w-4 h-4 mr-1" />
-                                    Effacer tous les filtres
-                                </Button>
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={clearFilters}
+                                        className="text-muted-foreground w-full"
+                                        disabled={isPending}
+                                    >
+                                        <X className="w-4 h-4 mr-2" />
+                                        Effacer tous les filtres
+                                    </Button>
+                                </motion.div>
                             )}
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
-        </>
+        </div>
     );
 }

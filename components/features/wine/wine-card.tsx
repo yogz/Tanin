@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { Wine, Calendar, MapPin, ChevronRight } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
+import { Wine, MapPin, ChevronRight, Minus, Star } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { WineTypeBadge } from "@/components/ui/wine-type-badge";
-import { Rating } from "@/components/ui/rating";
 import { cn } from "@/lib/utils";
+import { useState, useTransition } from "react";
+import { updateStock } from "@/app/actions/wine-actions";
 
 interface WineCardProps {
     id: number;
@@ -30,100 +32,182 @@ export function WineCard({
     millesime,
     type,
     region,
-    appellation,
-    nombre,
+    nombre: initialNombre,
     debutApogee,
     finApogee,
-    rating,
     index = 0,
 }: WineCardProps) {
+    const router = useRouter();
+    const [nombre, setNombre] = useState(initialNombre);
+    const [isPending, startTransition] = useTransition();
+    const [showAction, setShowAction] = useState(false);
+
+    const x = useMotionValue(0);
+    const background = useTransform(
+        x,
+        [-100, 0],
+        ["hsl(142, 71%, 45%)", "transparent"]
+    );
+    const actionOpacity = useTransform(x, [-100, -50, 0], [1, 0.5, 0]);
+
     const currentYear = new Date().getFullYear();
 
-    // Determine drinking window status
     const getDrinkWindowStatus = () => {
         if (!debutApogee && !finApogee) return null;
-        if (finApogee && currentYear > finApogee) return { label: "Past Peak", color: "text-red-400" };
-        if (debutApogee && currentYear < debutApogee) return { label: "Keep", color: "text-blue-400" };
-        return { label: "Drink Now", color: "text-green-400" };
+        if (finApogee && currentYear > finApogee) return { label: "Passé", color: "text-red-400", bg: "bg-red-400/10" };
+        if (debutApogee && currentYear < debutApogee) return { label: "À garder", color: "text-blue-400", bg: "bg-blue-400/10" };
+        return { label: "À boire", color: "text-green-400", bg: "bg-green-400/10" };
     };
 
     const drinkStatus = getDrinkWindowStatus();
+
+    const handleDrink = async () => {
+        if (nombre <= 0) return;
+
+        startTransition(async () => {
+            const result = await updateStock(id, -1);
+            if (result.success && result.newCount !== undefined) {
+                setNombre(result.newCount);
+            }
+        });
+    };
+
+    const handleDragEnd = (_: never, info: PanInfo) => {
+        if (info.offset.x < -80 && nombre > 0) {
+            setShowAction(true);
+            handleDrink();
+            setTimeout(() => setShowAction(false), 1500);
+        }
+    };
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.05 }}
+            transition={{ duration: 0.3, delay: index * 0.03 }}
+            className="relative overflow-hidden rounded-2xl"
         >
-            <Link href={`/cellar/${id}`}>
-                <GlassCard className="p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] cursor-pointer group">
-                    <div className="flex items-start justify-between gap-3">
-                        {/* Wine Icon */}
-                        <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                            <Wine className="w-6 h-6 text-purple-300" />
-                        </div>
+            {/* Swipe Action Background */}
+            <motion.div
+                className="absolute inset-0 flex items-center justify-end pr-6 rounded-2xl"
+                style={{ background }}
+            >
+                <motion.div
+                    style={{ opacity: actionOpacity }}
+                    className="flex items-center gap-2 text-white font-medium"
+                >
+                    <Minus className="w-5 h-5" />
+                    <span>Boire</span>
+                </motion.div>
+            </motion.div>
 
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                            {/* Header */}
-                            <div className="flex items-start justify-between">
-                                <div className="min-w-0 flex-1">
-                                    <h3 className="font-semibold text-foreground truncate">
-                                        {domaine}
-                                    </h3>
-                                    {designation && (
-                                        <p className="text-sm text-muted-foreground truncate">
-                                            {designation}
-                                        </p>
-                                    )}
-                                </div>
+            {/* Success feedback */}
+            {showAction && (
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 flex items-center justify-center bg-green-500/90 rounded-2xl z-20"
+                >
+                    <div className="flex items-center gap-2 text-white font-medium">
+                        <Wine className="w-5 h-5" />
+                        <span>Santé !</span>
+                    </div>
+                </motion.div>
+            )}
+
+            {/* Card */}
+            <motion.div
+                drag={nombre > 0 ? "x" : false}
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={{ left: 0.3, right: 0 }}
+                onDragEnd={handleDragEnd}
+                style={{ x }}
+                whileTap={{ cursor: "grabbing" }}
+                className="relative z-10"
+            >
+                <Link href={`/cellar/${id}`}>
+                    <GlassCard className={cn(
+                        "p-4 transition-all duration-200 active:scale-[0.98] cursor-pointer group",
+                        isPending && "opacity-70"
+                    )}>
+                        <div className="flex items-start gap-3">
+                            {/* Wine Icon with Type Color */}
+                            <div className={cn(
+                                "flex-shrink-0 w-14 h-14 rounded-2xl flex items-center justify-center relative overflow-hidden",
+                                type?.toLowerCase().includes("rouge") ? "bg-gradient-to-br from-red-500/30 to-red-700/20" :
+                                type?.toLowerCase().includes("blanc") ? "bg-gradient-to-br from-amber-200/40 to-yellow-100/30" :
+                                type?.toLowerCase().includes("rosé") ? "bg-gradient-to-br from-pink-300/40 to-rose-200/30" :
+                                "bg-gradient-to-br from-purple-500/20 to-pink-500/20"
+                            )}>
+                                <Wine className={cn(
+                                    "w-7 h-7",
+                                    type?.toLowerCase().includes("rouge") ? "text-red-400" :
+                                    type?.toLowerCase().includes("blanc") ? "text-amber-600" :
+                                    type?.toLowerCase().includes("rosé") ? "text-pink-400" :
+                                    "text-purple-300"
+                                )} />
+                                {/* Vintage Badge */}
                                 {millesime && (
-                                    <span className="text-lg font-bold text-foreground/80 ml-2">
+                                    <div className="absolute -bottom-1 -right-1 bg-background/90 backdrop-blur-sm text-[10px] font-bold px-1.5 py-0.5 rounded-md border border-border/50">
                                         {millesime}
-                                    </span>
+                                    </div>
                                 )}
                             </div>
 
-                            {/* Meta Info */}
-                            <div className="flex flex-wrap items-center gap-2 mt-2">
-                                {type && <WineTypeBadge type={type} className="text-xs" />}
-                                {region && (
-                                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                                        <MapPin className="w-3 h-3" />
-                                        {region}
-                                    </span>
+                            {/* Content */}
+                            <div className="flex-1 min-w-0">
+                                {/* Header */}
+                                <h3 className="font-semibold text-foreground truncate leading-tight">
+                                    {domaine}
+                                </h3>
+                                {designation && (
+                                    <p className="text-sm text-muted-foreground truncate mt-0.5">
+                                        {designation}
+                                    </p>
                                 )}
-                            </div>
 
-                            {/* Footer */}
-                            <div className="flex items-center justify-between mt-3">
-                                <div className="flex items-center gap-3">
-                                    {/* Stock */}
-                                    <span className={cn(
-                                        "text-sm font-medium",
-                                        nombre === 0 ? "text-red-400" : nombre <= 2 ? "text-amber-400" : "text-green-400"
-                                    )}>
-                                        {nombre} bottle{nombre !== 1 ? "s" : ""}
-                                    </span>
-
-                                    {/* Drink Window */}
+                                {/* Meta Info */}
+                                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                                    {type && <WineTypeBadge type={type} className="text-[10px]" />}
+                                    {region && (
+                                        <span className="text-[11px] text-muted-foreground flex items-center gap-0.5 bg-muted/50 px-1.5 py-0.5 rounded-md">
+                                            <MapPin className="w-3 h-3" />
+                                            {region}
+                                        </span>
+                                    )}
                                     {drinkStatus && (
-                                        <span className={cn("text-xs font-medium", drinkStatus.color)}>
+                                        <span className={cn(
+                                            "text-[10px] font-medium px-1.5 py-0.5 rounded-md",
+                                            drinkStatus.color,
+                                            drinkStatus.bg
+                                        )}>
                                             {drinkStatus.label}
                                         </span>
                                     )}
                                 </div>
+                            </div>
 
-                                {/* Rating */}
-                                {rating && <Rating value={rating} size="sm" />}
+                            {/* Right side: Stock + Arrow */}
+                            <div className="flex flex-col items-end justify-between h-full gap-2">
+                                {/* Stock Badge */}
+                                <div className={cn(
+                                    "flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-semibold",
+                                    nombre === 0 ? "bg-red-500/10 text-red-400" :
+                                    nombre <= 2 ? "bg-amber-500/10 text-amber-400" :
+                                    "bg-green-500/10 text-green-400"
+                                )}>
+                                    <span>{nombre}</span>
+                                    <Wine className="w-3.5 h-3.5" />
+                                </div>
+
+                                {/* Arrow */}
+                                <ChevronRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-muted-foreground/60 transition-colors" />
                             </div>
                         </div>
-
-                        {/* Arrow */}
-                        <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-foreground/70 transition-colors flex-shrink-0" />
-                    </div>
-                </GlassCard>
-            </Link>
+                    </GlassCard>
+                </Link>
+            </motion.div>
         </motion.div>
     );
 }
