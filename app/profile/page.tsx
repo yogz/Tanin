@@ -1,11 +1,13 @@
-import { User, Settings, Moon, Wine, Bell } from "lucide-react";
+import { User, Moon } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { getSession } from "@/lib/auth";
+import { getProfileStats } from "@/app/actions/wine-actions";
 import { LogoutButtonSimple } from "@/components/auth/logout-button-simple";
 import { WineThemeSelector } from "@/components/features/wine-theme-selector";
 
 export default async function ProfilePage() {
     const session = await getSession();
+    const stats = await getProfileStats();
     return (
         <div className="min-h-screen">
             {/* Header */}
@@ -29,16 +31,16 @@ export default async function ProfilePage() {
                 <GlassCard className="p-4">
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div>
-                            <p className="text-2xl font-bold">45</p>
-                            <p className="text-xs text-muted-foreground">Bottles</p>
+                            <p className="text-2xl font-bold">{stats.totalBottles}</p>
+                            <p className="text-xs text-muted-foreground">Bouteilles</p>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold">23</p>
-                            <p className="text-xs text-muted-foreground">Tastings</p>
+                            <p className="text-2xl font-bold">{stats.totalTastings}</p>
+                            <p className="text-xs text-muted-foreground">Dégustations</p>
                         </div>
                         <div>
-                            <p className="text-2xl font-bold">4.2</p>
-                            <p className="text-xs text-muted-foreground">Avg Rating</p>
+                            <p className="text-2xl font-bold">{stats.avgRating}</p>
+                            <p className="text-xs text-muted-foreground">Note Moy.</p>
                         </div>
                     </div>
                 </GlassCard>
@@ -46,48 +48,18 @@ export default async function ProfilePage() {
 
             {/* Settings Menu */}
             <div className="px-4 mt-6 space-y-3">
-                <h2 className="text-sm font-medium text-muted-foreground px-1">Settings</h2>
+                <h2 className="text-sm font-medium text-muted-foreground px-1">Paramètres</h2>
 
                 <WineThemeSelector />
 
-                <GlassCard className="divide-y divide-white/5">
-                    <button className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors">
-                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
-                            <Wine className="w-5 h-5 text-purple-400" />
-                        </div>
-                        <div className="flex-1 text-left">
-                            <p className="font-medium">Preferences</p>
-                            <p className="text-sm text-muted-foreground">Default regions, currency</p>
-                        </div>
-                    </button>
-
-                    <button className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors">
-                        <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                            <Bell className="w-5 h-5 text-amber-400" />
-                        </div>
-                        <div className="flex-1 text-left">
-                            <p className="font-medium">Notifications</p>
-                            <p className="text-sm text-muted-foreground">Drinking window reminders</p>
-                        </div>
-                    </button>
-
-                    <button className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors">
+                <GlassCard>
+                    <button className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors rounded-2xl">
                         <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
                             <Moon className="w-5 h-5 text-blue-400" />
                         </div>
                         <div className="flex-1 text-left">
-                            <p className="font-medium">Appearance</p>
-                            <p className="text-sm text-muted-foreground">Dark mode enabled</p>
-                        </div>
-                    </button>
-
-                    <button className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors">
-                        <div className="w-10 h-10 rounded-xl bg-zinc-500/20 flex items-center justify-center">
-                            <Settings className="w-5 h-5 text-zinc-400" />
-                        </div>
-                        <div className="flex-1 text-left">
-                            <p className="font-medium">Account</p>
-                            <p className="text-sm text-muted-foreground">Manage your account</p>
+                            <p className="font-medium">Apparence</p>
+                            <p className="text-sm text-muted-foreground">Mode sombre activé</p>
                         </div>
                     </button>
                 </GlassCard>
