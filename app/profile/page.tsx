@@ -1,12 +1,15 @@
-import { User, Moon } from "lucide-react";
+import { User } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { getSession } from "@/lib/auth";
 import { getProfileStats } from "@/app/actions/wine-actions";
+import { getTheme } from "@/lib/theme";
 import { LogoutButtonSimple } from "@/components/auth/logout-button-simple";
+import { ThemeSelector } from "@/components/theme/theme-selector";
 
 export default async function ProfilePage() {
     const session = await getSession();
     const stats = await getProfileStats();
+    const theme = await getTheme();
     return (
         <div className="min-h-screen">
             {/* Header */}
@@ -50,15 +53,7 @@ export default async function ProfilePage() {
                 <h2 className="text-sm font-medium text-muted-foreground px-1">Paramètres</h2>
 
                 <GlassCard>
-                    <button className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors rounded-2xl">
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/20 flex items-center justify-center">
-                            <Moon className="w-5 h-5 text-blue-400" />
-                        </div>
-                        <div className="flex-1 text-left">
-                            <p className="font-medium">Apparence</p>
-                            <p className="text-sm text-muted-foreground">Mode sombre activé</p>
-                        </div>
-                    </button>
+                    <ThemeSelector currentTheme={theme} />
                 </GlassCard>
 
                 <div className="pt-4">

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { ConditionalNav } from "@/components/layout/conditional-nav";
+import { ThemeProvider } from "@/components/theme/theme-provider";
+import { getTheme } from "@/lib/theme";
 import { Toaster } from "sonner";
 
 const inter = Inter({
@@ -27,16 +29,20 @@ export const viewport: Viewport = {
   themeColor: "#0a0a0a",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const theme = await getTheme();
+
   return (
     <html lang="fr" className="dark">
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground min-h-screen pb-24`}>
-        {children}
-        <ConditionalNav />
+        <ThemeProvider theme={theme}>
+          {children}
+          <ConditionalNav />
+        </ThemeProvider>
         <Toaster
           position="top-center"
           toastOptions={{
