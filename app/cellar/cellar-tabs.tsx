@@ -6,12 +6,17 @@ import { cn } from "@/lib/utils";
 import { Wine, History } from "lucide-react";
 
 interface CellarTabsProps {
-    inStockCount: number;
-    consumedCount: number;
+    inStock: {
+        references: number;
+        bottles: number;
+    };
+    consumed: {
+        references: number;
+    };
     currentTab: "current" | "consumed";
 }
 
-export function CellarTabs({ inStockCount, consumedCount, currentTab }: CellarTabsProps) {
+export function CellarTabs({ inStock, consumed, currentTab }: CellarTabsProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
@@ -33,7 +38,7 @@ export function CellarTabs({ inStockCount, consumedCount, currentTab }: CellarTa
             <button
                 onClick={() => handleTabChange("current")}
                 className={cn(
-                    "flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                    "flex-1 flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-md transition-all",
                     currentTab === "current"
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
@@ -41,19 +46,29 @@ export function CellarTabs({ inStockCount, consumedCount, currentTab }: CellarTa
                 )}
                 disabled={isPending}
             >
-                <Wine className="w-4 h-4" />
-                <span>En cave</span>
-                <span className={cn(
-                    "text-xs px-1.5 py-0.5 rounded-full",
-                    currentTab === "current" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                )}>
-                    {inStockCount}
-                </span>
+                <div className="flex items-center gap-2">
+                    <Wine className="w-4 h-4" />
+                    <span className="text-sm font-medium">En cave</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <span className={cn(
+                        "text-lg font-bold",
+                        currentTab === "current" ? "text-primary" : "text-muted-foreground"
+                    )}>
+                        {inStock.bottles}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                        bouteilles
+                    </span>
+                    <span className="text-xs text-muted-foreground/60">
+                        ({inStock.references} réf.)
+                    </span>
+                </div>
             </button>
             <button
                 onClick={() => handleTabChange("consumed")}
                 className={cn(
-                    "flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-all",
+                    "flex-1 flex flex-col items-center justify-center gap-0.5 px-4 py-2 rounded-md transition-all",
                     currentTab === "consumed"
                         ? "bg-background text-foreground shadow-sm"
                         : "text-muted-foreground hover:text-foreground",
@@ -61,14 +76,21 @@ export function CellarTabs({ inStockCount, consumedCount, currentTab }: CellarTa
                 )}
                 disabled={isPending}
             >
-                <History className="w-4 h-4" />
-                <span>Bues</span>
-                <span className={cn(
-                    "text-xs px-1.5 py-0.5 rounded-full",
-                    currentTab === "consumed" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"
-                )}>
-                    {consumedCount}
-                </span>
+                <div className="flex items-center gap-2">
+                    <History className="w-4 h-4" />
+                    <span className="text-sm font-medium">Bues</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <span className={cn(
+                        "text-lg font-bold",
+                        currentTab === "consumed" ? "text-primary" : "text-muted-foreground"
+                    )}>
+                        {consumed.references}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                        références
+                    </span>
+                </div>
             </button>
         </div>
     );

@@ -109,8 +109,8 @@ export default async function CellarPage({ searchParams }: CellarPageProps) {
                 <div className="px-4 pt-4 pb-3">
                     <h1 className="text-2xl font-bold mb-3">Ma Cave</h1>
                     <CellarTabs
-                        inStockCount={counts.inStock}
-                        consumedCount={counts.consumed}
+                        inStock={counts.inStock}
+                        consumed={counts.consumed}
                         currentTab={currentTab}
                     />
                     <CellarFilters

@@ -68,19 +68,31 @@ export async function getWines(options?: {
 }
 
 export async function getWineCounts() {
-    const inStockResult = await db
+    // References count (number of different wines)
+    const inStockRefsResult = await db
         .select({ count: sql<number>`COUNT(*)` })
         .from(wines)
         .where(sql`${wines.nombre} > 0`);
 
-    const consumedResult = await db
+    const consumedRefsResult = await db
         .select({ count: sql<number>`COUNT(*)` })
         .from(wines)
         .where(sql`${wines.nombre} = 0 OR ${wines.nombre} IS NULL`);
 
+    // Bottles count (total number of bottles)
+    const inStockBottlesResult = await db
+        .select({ sum: sql<number>`COALESCE(SUM(${wines.nombre}), 0)` })
+        .from(wines)
+        .where(sql`${wines.nombre} > 0`);
+
     return {
-        inStock: Number(inStockResult[0]?.count) || 0,
-        consumed: Number(consumedResult[0]?.count) || 0,
+        inStock: {
+            references: Number(inStockRefsResult[0]?.count) || 0,
+            bottles: Number(inStockBottlesResult[0]?.sum) || 0,
+        },
+        consumed: {
+            references: Number(consumedRefsResult[0]?.count) || 0,
+        },
     };
 }
 
