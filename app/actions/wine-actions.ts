@@ -128,15 +128,17 @@ export async function getWine(id: number): Promise<WineWithTastings | null> {
 export async function getDashboardStats() {
     const currentYear = new Date().getFullYear();
 
-    // Total bottles
+    // Total bottles (only in stock)
     const totalResult = await db
         .select({ sum: sql<number>`COALESCE(SUM(${wines.nombre}), 0)` })
-        .from(wines);
+        .from(wines)
+        .where(sql`${wines.nombre} > 0`);
 
-    // Total value
+    // Total value (only bottles in stock)
     const valueResult = await db
         .select({ sum: sql<number>`COALESCE(SUM(${wines.prixAchat} * ${wines.nombre}), 0)` })
-        .from(wines);
+        .from(wines)
+        .where(sql`${wines.nombre} > 0`);
 
     // Wines at peak (drink now)
     const peakResult = await db
@@ -237,6 +239,63 @@ export async function getUniqueMillesimes() {
         .orderBy(desc(wines.millesime));
 
     return result.map((r) => r.millesime).filter(Boolean) as number[];
+}
+
+export async function getValueDetails() {
+    // Get wines with value, sorted by total value (price * quantity)
+    const result = await db
+        .select({
+            id: wines.id,
+            domaine: wines.domaine,
+            designation: wines.designation,
+            millesime: wines.millesime,
+            type: wines.type,
+            nombre: wines.nombre,
+            prixAchat: wines.prixAchat,
+        })
+        .from(wines)
+        .where(sql`${wines.nombre} > 0 AND ${wines.prixAchat} IS NOT NULL AND ${wines.prixAchat} > 0`)
+        .orderBy(desc(sql`${wines.prixAchat} * ${wines.nombre}`))
+        .limit(20);
+
+    // Calculate totals
+    const totalResult = await db
+        .select({
+            totalValue: sql<number>`COALESCE(SUM(${wines.prixAchat} * ${wines.nombre}), 0)`,
+            totalBottles: sql<number>`COALESCE(SUM(${wines.nombre}), 0)`,
+            avgPrice: sql<number>`COALESCE(AVG(${wines.prixAchat}), 0)`,
+        })
+        .from(wines)
+        .where(sql`${wines.nombre} > 0 AND ${wines.prixAchat} IS NOT NULL AND ${wines.prixAchat} > 0`);
+
+    // Value by type
+    const byTypeResult = await db
+        .select({
+            type: wines.type,
+            value: sql<number>`COALESCE(SUM(${wines.prixAchat} * ${wines.nombre}), 0)`,
+            count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)`,
+        })
+        .from(wines)
+        .where(sql`${wines.nombre} > 0 AND ${wines.prixAchat} IS NOT NULL`)
+        .groupBy(wines.type)
+        .orderBy(desc(sql`SUM(${wines.prixAchat} * ${wines.nombre})`));
+
+    return {
+        topWines: result.map((w) => ({
+            ...w,
+            totalValue: Number(w.prixAchat || 0) * (w.nombre || 0),
+        })),
+        summary: {
+            totalValue: Number(totalResult[0]?.totalValue) || 0,
+            totalBottles: Number(totalResult[0]?.totalBottles) || 0,
+            avgPrice: Math.round(Number(totalResult[0]?.avgPrice) || 0),
+        },
+        byType: byTypeResult.map((r) => ({
+            type: r.type || "Inconnu",
+            value: Number(r.value),
+            count: Number(r.count),
+        })),
+    };
 }
 
 export async function getDistributionByRegion() {
