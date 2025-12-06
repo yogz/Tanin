@@ -31,7 +31,8 @@ export default async function WineDetailPage({ params }: WineDetailPageProps) {
         if (!wine.debutApogee && !wine.finApogee) return null;
         if (wine.finApogee && currentYear > wine.finApogee) return { label: "Passé", color: "text-red-400", bg: "bg-red-400/10" };
         if (wine.debutApogee && currentYear < wine.debutApogee) return { label: "À garder", color: "text-blue-400", bg: "bg-blue-400/10" };
-        return { label: "À boire", color: "text-green-400", bg: "bg-green-400/10" };
+        if (wine.finApogee && currentYear === wine.finApogee) return { label: "À boire", color: "text-green-400", bg: "bg-green-400/10" };
+        return { label: "À boire / attendre", color: "text-amber-400", bg: "bg-amber-400/10" };
     };
 
     const drinkStatus = getDrinkWindowStatus();
