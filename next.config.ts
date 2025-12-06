@@ -4,9 +4,6 @@ const nextConfig: NextConfig = {
   // Enable compression
   compress: true,
   
-  // Optimize production builds
-  swcMinify: true,
-  
   // Optimize images (if used in future)
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -47,7 +44,10 @@ const nextConfig: NextConfig = {
     ];
   },
   
-  // Webpack optimizations
+  // Turbopack configuration (Next.js 16 uses Turbopack by default)
+  turbopack: {},
+  
+  // Webpack optimizations (kept for compatibility, but Turbopack will be used)
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // Optimize client-side bundle
