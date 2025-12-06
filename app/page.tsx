@@ -18,9 +18,9 @@ export default async function DashboardPage() {
   const winesSuggestions = await getWinesToDrink(10);
   const maturity = await getMaturityProfile();
   const vintages = await getVintageDistribution();
-  const byRegion = await getDistributionByRegion();
-  const byAppellation = await getDistributionByAppellation();
-  const byCepage = await getDistributionByCepage();
+  const byRegion = await getDistributionByRegion(10);
+  const byAppellation = await getDistributionByAppellation(10);
+  const byCepage = await getDistributionByCepage(10);
 
   const suggestions = winesSuggestions.slice(0, 3);
 

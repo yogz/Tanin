@@ -344,8 +344,8 @@ export async function getValueDetails() {
     };
 }
 
-export async function getDistributionByRegion() {
-    const result = await db
+export async function getDistributionByRegion(limit?: number) {
+    let query = db
         .select({
             region: wines.region,
             count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)`,
@@ -353,14 +353,18 @@ export async function getDistributionByRegion() {
         .from(wines)
         .where(sql`${wines.region} IS NOT NULL AND ${wines.region} != ''`)
         .groupBy(wines.region)
-        .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`))
-        .limit(10);
+        .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`));
+    
+    if (limit !== undefined) {
+        query = query.limit(limit) as any;
+    }
 
+    const result = await query;
     return result.map((r) => ({ name: r.region || "Unknown", count: Number(r.count) }));
 }
 
-export async function getDistributionByAppellation() {
-    const result = await db
+export async function getDistributionByAppellation(limit?: number) {
+    let query = db
         .select({
             appellation: wines.appellation,
             count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)`,
@@ -368,14 +372,18 @@ export async function getDistributionByAppellation() {
         .from(wines)
         .where(sql`${wines.appellation} IS NOT NULL AND ${wines.appellation} != ''`)
         .groupBy(wines.appellation)
-        .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`))
-        .limit(10);
+        .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`));
+    
+    if (limit !== undefined) {
+        query = query.limit(limit) as any;
+    }
 
+    const result = await query;
     return result.map((r) => ({ name: r.appellation || "Unknown", count: Number(r.count) }));
 }
 
-export async function getDistributionByCepage() {
-    const result = await db
+export async function getDistributionByCepage(limit?: number) {
+    let query = db
         .select({
             cepage: wines.cepage,
             count: sql<number>`COALESCE(SUM(${wines.nombre}), 0)`,
@@ -383,9 +391,13 @@ export async function getDistributionByCepage() {
         .from(wines)
         .where(sql`${wines.cepage} IS NOT NULL AND ${wines.cepage} != ''`)
         .groupBy(wines.cepage)
-        .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`))
-        .limit(10);
+        .orderBy(desc(sql`COALESCE(SUM(${wines.nombre}), 0)`));
+    
+    if (limit !== undefined) {
+        query = query.limit(limit) as any;
+    }
 
+    const result = await query;
     return result.map((r) => ({ name: r.cepage || "Unknown", count: Number(r.count) }));
 }
 

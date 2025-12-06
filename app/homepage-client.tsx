@@ -315,10 +315,17 @@ export default function HomepageClient({
             <motion.div variants={itemVariants} className="px-5 mt-6 space-y-4">
                 {/* Regions */}
                 <div>
-                    <div className="flex items-center gap-2 mb-3">
-                        <MapPin className="w-4 h-4 text-purple-400" />
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Régions</h2>
-                    </div>
+                    <Link href="/distribution/regions">
+                        <div className="flex items-center gap-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity">
+                            <MapPin className="w-4 h-4 text-purple-400" />
+                            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Régions</h2>
+                            {byRegion.length > 5 && (
+                                <span className="text-xs text-muted-foreground ml-auto">
+                                    {byRegion.length} au total
+                                </span>
+                            )}
+                        </div>
+                    </Link>
                     <GlassCard className="p-4">
                         <ChartContainer config={regionChartConfig} className="h-[180px] w-full !aspect-auto">
                             <BarChart data={byRegion.slice(0, 5)} layout="vertical" margin={{ left: 80, right: 20 }}>
@@ -343,10 +350,17 @@ export default function HomepageClient({
 
                 {/* Appellations */}
                 <div>
-                    <div className="flex items-center gap-2 mb-3">
-                        <Tag className="w-4 h-4 text-pink-400" />
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Appellations</h2>
-                    </div>
+                    <Link href="/distribution/appellations">
+                        <div className="flex items-center gap-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity">
+                            <Tag className="w-4 h-4 text-pink-400" />
+                            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Appellations</h2>
+                            {byAppellation.length > 5 && (
+                                <span className="text-xs text-muted-foreground ml-auto">
+                                    {byAppellation.length} au total
+                                </span>
+                            )}
+                        </div>
+                    </Link>
                     <GlassCard className="p-4">
                         <ChartContainer config={appellationChartConfig} className="h-[180px] w-full !aspect-auto">
                             <BarChart data={byAppellation.slice(0, 5)} layout="vertical" margin={{ left: 90, right: 20 }}>
@@ -371,10 +385,17 @@ export default function HomepageClient({
 
                 {/* Cépages */}
                 <div className="pb-8">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Grape className="w-4 h-4 text-cyan-400" />
-                        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Cépages</h2>
-                    </div>
+                    <Link href="/distribution/cepages">
+                        <div className="flex items-center gap-2 mb-3 cursor-pointer hover:opacity-80 transition-opacity">
+                            <Grape className="w-4 h-4 text-cyan-400" />
+                            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Cépages</h2>
+                            {byCepage.length > 5 && (
+                                <span className="text-xs text-muted-foreground ml-auto">
+                                    {byCepage.length} au total
+                                </span>
+                            )}
+                        </div>
+                    </Link>
                     <GlassCard className="p-4">
                         <ChartContainer config={cepageChartConfig} className="h-[180px] w-full !aspect-auto">
                             <BarChart data={byCepage.slice(0, 5)} layout="vertical" margin={{ left: 80, right: 20 }}>
