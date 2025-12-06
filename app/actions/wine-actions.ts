@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { wines, tastings } from "@/lib/db/schema";
-import { eq, like, or, sql, desc, asc } from "drizzle-orm";
+import { eq, like, or, sql, desc, asc, max } from "drizzle-orm";
 
 export type WineWithTastings = typeof wines.$inferSelect & {
     tastings: (typeof tastings.$inferSelect)[];
@@ -76,6 +76,45 @@ export async function getWines(options?: {
         conditions.push(sql`${wines.debutApogee} <= ${currentYear} AND ${wines.finApogee} >= ${currentYear} AND ${wines.nombre} > 0`);
     } else if (maturity === "old") {
         conditions.push(sql`${wines.finApogee} < ${currentYear} AND ${wines.nombre} > 0`);
+    }
+
+    // If fetching consumed wines, we need to join with tastings to get the latest tasting date
+    if (inStock === false) {
+        const result = await db
+            .select({
+                id: wines.id,
+                domaine: wines.domaine,
+                millesime: wines.millesime,
+                appellation: wines.appellation,
+                designation: wines.designation,
+                cru: wines.cru,
+                type: wines.type,
+                region: wines.region,
+                cepage: wines.cepage,
+                debutApogee: wines.debutApogee,
+                finApogee: wines.finApogee,
+                note: wines.note,
+                prixAchat: wines.prixAchat,
+                lieuAchat: wines.lieuAchat,
+                dateAchat: wines.dateAchat,
+                nombre: wines.nombre,
+                caConnu: wines.caConnu,
+                prixActuel: wines.prixActuel,
+                prixActuelUpdatedAt: wines.prixActuelUpdatedAt,
+                createdAt: wines.createdAt,
+                updatedAt: wines.updatedAt,
+                lastTastingDate: sql<string | null>`(SELECT MAX(tastings.date) FROM tastings WHERE tastings.wine_id = ${wines.id})`.as('last_tasting_date'),
+            })
+            .from(wines)
+            .where(conditions.length > 0 ? sql`${conditions.reduce((a, b) => sql`${a} AND ${b}`)}` : undefined)
+            .limit(limit)
+            .offset(offset)
+            .orderBy(desc(sql`(SELECT MAX(tastings.date) FROM tastings WHERE tastings.wine_id = ${wines.id})`));
+        
+        return result.map(wine => ({
+            ...wine,
+            lastTastingDate: wine.lastTastingDate || null,
+        }));
     }
 
     const result = await db
@@ -499,6 +538,52 @@ export async function getVintageDistribution() {
         .orderBy(asc(wines.millesime));
 
     return result.map(r => ({ year: r.year || 0, count: Number(r.count) }));
+}
+
+export async function getConsumptionByMonth(months: number = 12) {
+    // Get the start date (months ago)
+    const startDate = new Date();
+    startDate.setMonth(startDate.getMonth() - months);
+    const startDateStr = startDate.toISOString().split('T')[0];
+
+    // Get consumption data grouped by month
+    const result = await db
+        .select({
+            month: sql<string>`TO_CHAR(${tastings.date}, 'YYYY-MM')`,
+            count: sql<number>`COUNT(*)`,
+        })
+        .from(tastings)
+        .where(sql`${tastings.date} >= ${startDateStr} AND ${tastings.date} IS NOT NULL`)
+        .groupBy(sql`TO_CHAR(${tastings.date}, 'YYYY-MM')`)
+        .orderBy(asc(sql`TO_CHAR(${tastings.date}, 'YYYY-MM')`));
+
+    // Generate all months in range and fill missing ones with 0
+    const monthsData: Array<{ month: string; count: number }> = [];
+    const currentDate = new Date();
+    
+    for (let i = months - 1; i >= 0; i--) {
+        const date = new Date(currentDate);
+        date.setMonth(date.getMonth() - i);
+        const monthStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        
+        const found = result.find(r => r.month === monthStr);
+        monthsData.push({
+            month: monthStr,
+            count: found ? Number(found.count) : 0,
+        });
+    }
+
+    // Format month labels
+    return monthsData.map(item => {
+        const [year, month] = item.month.split('-');
+        const date = new Date(parseInt(year), parseInt(month) - 1);
+        const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+        return {
+            month: item.month,
+            label: `${monthNames[parseInt(month) - 1]} ${year.slice(-2)}`,
+            count: item.count,
+        };
+    });
 }
 
 export async function addWine(data: {

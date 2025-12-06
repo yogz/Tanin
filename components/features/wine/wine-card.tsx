@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, useMotionValue, useTransform, PanInfo } from "framer-motion";
-import { Wine, MapPin, ChevronRight, Minus, Star } from "lucide-react";
+import { Wine, MapPin, ChevronRight, Minus, Star, Calendar } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { WineTypeBadge } from "@/components/ui/wine-type-badge";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,8 @@ interface WineCardProps {
     debutApogee?: number | null;
     finApogee?: number | null;
     rating?: number | null;
+    updatedAt?: Date | string | null;
+    isConsumed?: boolean;
     index?: number;
 }
 
@@ -35,6 +37,8 @@ export function WineCard({
     nombre: initialNombre,
     debutApogee,
     finApogee,
+    updatedAt,
+    isConsumed = false,
     index = 0,
 }: WineCardProps) {
     const router = useRouter();
@@ -60,6 +64,35 @@ export function WineCard({
     };
 
     const drinkStatus = getDrinkWindowStatus();
+
+    const formatConsumedDate = (date: Date | string | null | undefined) => {
+        if (!date) return null;
+        const d = typeof date === 'string' ? new Date(date + 'T00:00:00') : date;
+        if (isNaN(d.getTime())) return null;
+        
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        d.setHours(0, 0, 0, 0);
+        
+        const diffTime = now.getTime() - d.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 0) return "Aujourd'hui";
+        if (diffDays === 1) return "Hier";
+        if (diffDays < 7) return `Il y a ${diffDays} jours`;
+        if (diffDays < 30) {
+            const weeks = Math.floor(diffDays / 7);
+            return `Il y a ${weeks} semaine${weeks > 1 ? 's' : ''}`;
+        }
+        if (diffDays < 365) {
+            const months = Math.floor(diffDays / 30);
+            return `Il y a ${months} mois`;
+        }
+        const years = Math.floor(diffDays / 365);
+        return `Il y a ${years} an${years > 1 ? 's' : ''}`;
+    };
+
+    const consumedDate = isConsumed && updatedAt ? formatConsumedDate(updatedAt) : null;
 
     const handleDrink = async () => {
         if (nombre <= 0) return;
@@ -176,13 +209,19 @@ export function WineCard({
                                             {region}
                                         </span>
                                     )}
-                                    {drinkStatus && (
+                                    {drinkStatus && !isConsumed && (
                                         <span className={cn(
                                             "text-[10px] font-medium px-1.5 py-0.5 rounded-md",
                                             drinkStatus.color,
                                             drinkStatus.bg
                                         )}>
                                             {drinkStatus.label}
+                                        </span>
+                                    )}
+                                    {consumedDate && (
+                                        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md text-orange-400 bg-orange-400/10 flex items-center gap-0.5">
+                                            <Calendar className="w-3 h-3" />
+                                            {consumedDate}
                                         </span>
                                     )}
                                 </div>

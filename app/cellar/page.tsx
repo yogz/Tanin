@@ -7,7 +7,8 @@ import {
     getUniqueCepages,
     getUniqueLieuxAchat,
     getUniqueMillesimes,
-    getWineCounts
+    getWineCounts,
+    getConsumptionByMonth
 } from "@/app/actions/wine-actions";
 import { WineCard } from "@/components/features/wine/wine-card";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -15,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CellarFilters } from "./cellar-filters";
 import { CellarTabs } from "./cellar-tabs";
+import { ConsumptionChart } from "./consumption-chart";
 
 // Force dynamic rendering to avoid too many DB connections at build time
 export const dynamic = "force-dynamic";
@@ -86,6 +88,8 @@ async function WineList({
                     nombre={wine.nombre ?? 0}
                     debutApogee={wine.debutApogee}
                     finApogee={wine.finApogee}
+                    updatedAt={(wine as any).lastTastingDate || wine.updatedAt}
+                    isConsumed={!inStock}
                     index={index}
                 />
             ))}
@@ -137,6 +141,9 @@ export default async function CellarPage({ searchParams }: CellarPageProps) {
         ? params.maturity as "keep" | "peak" | "old" 
         : undefined;
 
+    // Get consumption data for chart if on consumed tab
+    const consumptionData = currentTab === "consumed" ? await getConsumptionByMonth(12) : null;
+
     return (
         <div className="min-h-screen">
             {/* Header */}
@@ -165,6 +172,13 @@ export default async function CellarPage({ searchParams }: CellarPageProps) {
                     />
                 </div>
             </div>
+
+            {/* Consumption Chart */}
+            {currentTab === "consumed" && consumptionData && (
+                <div className="px-4 pt-4">
+                    <ConsumptionChart data={consumptionData} />
+                </div>
+            )}
 
             {/* Wine List */}
             <div className="px-4 py-4">
