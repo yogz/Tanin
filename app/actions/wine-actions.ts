@@ -99,8 +99,6 @@ export async function getWines(options?: {
                 dateAchat: wines.dateAchat,
                 nombre: wines.nombre,
                 caConnu: wines.caConnu,
-                prixActuel: wines.prixActuel,
-                prixActuelUpdatedAt: wines.prixActuelUpdatedAt,
                 createdAt: wines.createdAt,
                 updatedAt: wines.updatedAt,
                 lastTastingDate: sql<string | null>`(SELECT MAX(tastings.date) FROM tastings WHERE tastings.wine_id = ${wines.id})`.as('last_tasting_date'),
