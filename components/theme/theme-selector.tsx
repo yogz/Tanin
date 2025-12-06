@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Moon, Check } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { changeTheme } from "@/app/actions/theme-actions";
-import { type Theme, THEMES } from "@/lib/theme";
+import { type Theme, THEMES } from "@/lib/theme-config";
 import { cn } from "@/lib/utils";
 
 interface ThemeSelectorProps {

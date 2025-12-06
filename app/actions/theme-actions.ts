@@ -1,6 +1,7 @@
 "use server";
 
-import { setTheme, type Theme } from "@/lib/theme";
+import { setTheme } from "@/lib/theme";
+import type { Theme } from "@/lib/theme-config";
 import { revalidatePath } from "next/cache";
 
 export async function changeTheme(theme: Theme) {
