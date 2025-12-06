@@ -8,6 +8,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { BarChart, Bar, XAxis, YAxis, PieChart, Pie, Cell, Label, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
+import { LogoutButton } from "@/components/auth/logout-button";
 
 // Types
 interface WineSuggestion {
@@ -51,6 +52,7 @@ interface HomepageClientProps {
     byRegion: DistributionItem[];
     byAppellation: DistributionItem[];
     byCepage: DistributionItem[];
+    userName?: string;
 }
 
 // Chart Configs
@@ -99,6 +101,7 @@ export default function HomepageClient({
     byRegion,
     byAppellation,
     byCepage,
+    userName,
 }: HomepageClientProps) {
     const router = useRouter();
     const sortedVintages = [...vintages].sort((a, b) => a.year - b.year);
@@ -126,7 +129,7 @@ export default function HomepageClient({
                 <div className="absolute bottom-0 left-0 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl" />
 
                 <motion.div variants={itemVariants} className="relative px-5 pt-14 pb-6">
-                    <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between mb-4">
                         <div>
                             <h1
                                 className="text-4xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent"
@@ -140,6 +143,11 @@ export default function HomepageClient({
                             <Wine className="w-7 h-7 text-purple-400" />
                         </div>
                     </div>
+                    {userName && (
+                        <div className="flex justify-end">
+                            <LogoutButton userName={userName} />
+                        </div>
+                    )}
                 </motion.div>
             </div>
 
