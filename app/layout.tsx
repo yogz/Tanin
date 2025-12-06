@@ -9,10 +9,14 @@ import { Toaster } from "sonner";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
+  display: "swap",
+  preload: true,
 });
 const playfair = Playfair_Display({
   subsets: ["latin"],
-  variable: "--font-playfair"
+  variable: "--font-playfair",
+  display: "swap",
+  preload: false, // Only preload primary font
 });
 
 export const metadata: Metadata = {
