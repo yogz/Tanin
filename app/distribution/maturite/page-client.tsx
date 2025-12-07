@@ -167,6 +167,7 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
                                                 'peak': 'À Boire',
                                                 'old': 'Passé'
                                             };
+                                            const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : String(entry.dataKey || '');
                                             return (
                                                 <div key={index} className="flex items-center gap-2">
                                                     <div 
@@ -174,7 +175,7 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
                                                         style={{ backgroundColor: entry.color }}
                                                     />
                                                     <span className="text-xs text-muted-foreground">
-                                                        {labels[entry.dataKey as string] || entry.dataKey}
+                                                        {labels[dataKey] || dataKey}
                                                     </span>
                                                 </div>
                                             );
