@@ -608,7 +608,7 @@ export async function getMaturityByYear(years: number = 10) {
     const endYear = currentYear + years;
 
     // Get all wines with apogee dates
-    const wines = await db
+    const winesData = await db
         .select({
             debutApogee: wines.debutApogee,
             finApogee: wines.finApogee,
@@ -625,7 +625,7 @@ export async function getMaturityByYear(years: number = 10) {
         let peak = 0;
         let old = 0;
 
-        wines.forEach(wine => {
+        winesData.forEach(wine => {
             const debut = wine.debutApogee;
             const fin = wine.finApogee;
             const count = Number(wine.nombre) || 0;
