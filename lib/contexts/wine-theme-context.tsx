@@ -90,16 +90,17 @@ export function WineThemeProvider({ children }: { children: React.ReactNode }) {
 
     const setTheme = (newTheme: WineTheme) => {
         setThemeState(newTheme);
-        localStorage.setItem("wine-theme", newTheme);
+        if (typeof window !== "undefined") {
+            localStorage.setItem("wine-theme", newTheme);
+        }
     };
 
-    // Prevent hydration mismatch
-    if (!mounted) {
-        return <>{children}</>;
-    }
+    // Always provide context, even before mount to prevent errors
+    // Use default theme during SSR/hydration
+    const currentTheme = mounted ? theme : "classic";
 
     return (
-        <WineThemeContext.Provider value={{ theme, colors: themes[theme], setTheme }}>
+        <WineThemeContext.Provider value={{ theme: currentTheme, colors: themes[currentTheme], setTheme }}>
             {children}
         </WineThemeContext.Provider>
     );
