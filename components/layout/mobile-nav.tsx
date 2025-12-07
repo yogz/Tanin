@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { useWineTheme } from "@/lib/contexts/wine-theme-context";
 
 const navItems = [
     { href: "/", icon: Home, label: "Accueil" },
@@ -15,6 +16,7 @@ const navItems = [
 
 export function MobileNav() {
     const pathname = usePathname();
+    const { colors } = useWineTheme();
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 px-4 pb-safe">
@@ -37,7 +39,12 @@ export function MobileNav() {
                                         <motion.div
                                             whileHover={{ scale: 1.05 }}
                                             whileTap={{ scale: 0.95 }}
-                                            className="flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shadow-lg shadow-purple-500/30"
+                                            className={cn(
+                                                "flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br shadow-lg",
+                                                colors.addButton.from,
+                                                colors.addButton.to,
+                                                colors.addButton.shadow
+                                            )}
                                         >
                                             <Icon className="w-7 h-7 text-white" strokeWidth={2.5} />
                                         </motion.div>

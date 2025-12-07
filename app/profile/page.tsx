@@ -1,6 +1,7 @@
 import { User, Settings, Moon, LogOut, Wine, Star, Bell } from "lucide-react";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
+import { WineThemeSelector } from "@/components/features/wine-theme-selector";
 
 export default function ProfilePage() {
     return (
@@ -44,6 +45,8 @@ export default function ProfilePage() {
             {/* Settings Menu */}
             <div className="px-4 mt-6 space-y-3">
                 <h2 className="text-sm font-medium text-muted-foreground px-1">Settings</h2>
+
+                <WineThemeSelector />
 
                 <GlassCard className="divide-y divide-white/5">
                     <button className="w-full flex items-center gap-3 p-4 hover:bg-white/5 transition-colors">

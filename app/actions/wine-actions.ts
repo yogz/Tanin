@@ -603,6 +603,57 @@ export async function getConsumptionByMonth(months: number = 12) {
     });
 }
 
+export async function getMaturityByYear(years: number = 10) {
+    const currentYear = new Date().getFullYear();
+    const endYear = currentYear + years;
+
+    // Get all wines with apogee dates
+    const wines = await db
+        .select({
+            debutApogee: wines.debutApogee,
+            finApogee: wines.finApogee,
+            nombre: wines.nombre,
+        })
+        .from(wines)
+        .where(sql`${wines.nombre} > 0 AND ${wines.debutApogee} IS NOT NULL AND ${wines.finApogee} IS NOT NULL`);
+
+    // Calculate maturity for each year
+    const yearData: Array<{ year: number; keep: number; peak: number; old: number }> = [];
+
+    for (let year = currentYear; year <= endYear; year++) {
+        let keep = 0;
+        let peak = 0;
+        let old = 0;
+
+        wines.forEach(wine => {
+            const debut = wine.debutApogee;
+            const fin = wine.finApogee;
+            const count = Number(wine.nombre) || 0;
+
+            if (debut && fin) {
+                if (year < debut) {
+                    keep += count;
+                } else if (year >= debut && year <= fin) {
+                    peak += count;
+                } else if (year > fin) {
+                    old += count;
+                }
+            }
+        });
+
+        yearData.push({ year, keep, peak, old });
+    }
+
+    return yearData.map(item => ({
+        year: item.year,
+        label: String(item.year),
+        keep: item.keep,
+        peak: item.peak,
+        old: item.old,
+        total: item.keep + item.peak + item.old,
+    }));
+}
+
 export async function addWine(data: {
     domaine: string;
     designation?: string;

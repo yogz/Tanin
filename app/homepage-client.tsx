@@ -217,7 +217,11 @@ export default function HomepageClient({
 
             {/* Maturity Chart */}
             <motion.div variants={itemVariants} className="px-5 mt-6">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Maturité</h2>
+                <Link href="/distribution/maturite">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 cursor-pointer hover:opacity-80 transition-opacity">
+                        Maturité
+                    </h2>
+                </Link>
 
                 <GlassCard className="p-4">
                     <div className="flex items-center gap-4">

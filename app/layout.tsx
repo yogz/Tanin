@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { MobileNav } from "@/components/layout/mobile-nav";
 import { Toaster } from "sonner";
+import { WineThemeProvider } from "@/lib/contexts/wine-theme-context";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -35,20 +36,22 @@ export default function RootLayout({
   return (
     <html lang="fr" className="dark">
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground min-h-screen pb-24`}>
-        {children}
-        <MobileNav />
-        <Toaster
-          position="top-center"
-          toastOptions={{
-            style: {
-              background: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
-              color: "hsl(var(--foreground))",
-            },
-          }}
-          expand={false}
-          richColors
-        />
+        <WineThemeProvider>
+          {children}
+          <MobileNav />
+          <Toaster
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
+                color: "hsl(var(--foreground))",
+              },
+            }}
+            expand={false}
+            richColors
+          />
+        </WineThemeProvider>
       </body>
     </html>
   );
