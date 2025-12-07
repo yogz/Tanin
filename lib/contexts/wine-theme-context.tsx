@@ -108,8 +108,13 @@ export function WineThemeProvider({ children }: { children: React.ReactNode }) {
 
 export function useWineTheme() {
     const context = useContext(WineThemeContext);
+    // Return default theme if context is not available (shouldn't happen, but prevents errors during hydration)
     if (context === undefined) {
-        throw new Error("useWineTheme must be used within a WineThemeProvider");
+        return {
+            theme: "classic" as WineTheme,
+            colors: themes.classic,
+            setTheme: () => {}, // No-op function
+        };
     }
     return context;
 }
