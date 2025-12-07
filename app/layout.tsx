@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { ConditionalNav } from "@/components/layout/conditional-nav";
 import { ThemeProvider } from "@/components/theme/theme-provider";
@@ -48,6 +49,7 @@ export default async function RootLayout({
           <WineThemeProvider>
             {children}
             <ConditionalNav />
+            <SpeedInsights />
             <Toaster
               position="top-center"
               toastOptions={{
