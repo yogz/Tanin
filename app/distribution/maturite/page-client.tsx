@@ -5,7 +5,6 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Legend } from "recharts";
 import { Clock, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 const maturityChartConfig = {
     keep: { label: "À Garder", color: "hsl(217, 91%, 60%)" },
@@ -15,11 +14,10 @@ const maturityChartConfig = {
 
 interface MaturiteDistributionClientProps {
     maturityByYear: Array<{ year: number; label: string; keep: number; peak: number; old: number; total: number }>;
-    currentMaturity: { keep: number; peak: number; old: number };
+    currentMaturity: { keep: number; drink: number; drinkWait: number; old: number };
 }
 
 export default function MaturiteDistributionClient({ maturityByYear, currentMaturity }: MaturiteDistributionClientProps) {
-    const router = useRouter();
     const currentYear = new Date().getFullYear();
 
     return (
@@ -49,36 +47,39 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
                 </div>
             </div>
 
-            {/* Current Stats */}
+            {/* Current Status Cards */}
             <div className="px-5 mt-6">
-                <GlassCard className="p-4 mb-4">
-                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                        État actuel ({currentYear})
-                    </h2>
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                    <Link href="/cellar?maturity=keep">
+                        <GlassCard className="p-4 text-center hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer">
+                            <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-blue-500/20 flex items-center justify-center">
                                 <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-                                <span className="text-xs text-muted-foreground">À Garder</span>
                             </div>
                             <p className="text-2xl font-bold">{currentMaturity.keep}</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">À Garder</p>
+                        </GlassCard>
+                    </Link>
+
+                    <Link href="/cellar?maturity=drink">
+                        <GlassCard className="p-4 text-center hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer">
+                            <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-green-500/20 flex items-center justify-center">
                                 <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                                <span className="text-xs text-muted-foreground">À Boire</span>
                             </div>
-                            <p className="text-2xl font-bold">{currentMaturity.peak}</p>
-                        </div>
-                        <div className="text-center">
-                            <div className="flex items-center justify-center gap-2 mb-1">
+                            <p className="text-2xl font-bold">{currentMaturity.drink}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">À Boire</p>
+                        </GlassCard>
+                    </Link>
+
+                    <Link href="/cellar?maturity=old">
+                        <GlassCard className="p-4 text-center hover:bg-white/5 transition-all active:scale-[0.98] cursor-pointer">
+                            <div className="w-10 h-10 mx-auto mb-2 rounded-xl bg-orange-500/20 flex items-center justify-center">
                                 <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
-                                <span className="text-xs text-muted-foreground">Passé</span>
                             </div>
                             <p className="text-2xl font-bold">{currentMaturity.old}</p>
-                        </div>
-                    </div>
-                </GlassCard>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Passé</p>
+                        </GlassCard>
+                    </Link>
+                </div>
             </div>
 
             {/* Evolution Chart */}
@@ -89,7 +90,7 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
                             Évolution de la maturité
                         </h2>
                         <p className="text-xs text-muted-foreground">
-                            Projection sur {maturityByYear.length} ans ({currentYear} - {maturityByYear[maturityByYear.length - 1]?.year})
+                            Projection sur {maturityByYear.length} ans ({currentYear} - {currentYear + maturityByYear.length - 1})
                         </p>
                     </div>
                     <ChartContainer config={maturityChartConfig} className="h-[400px] w-full">
@@ -123,16 +124,11 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
                                 fontSize={11}
                             />
                             <ChartTooltip 
-                                content={<ChartTooltipContent 
-                                    formatter={(value, name) => {
-                                        const labels: Record<string, string> = {
-                                            'keep': 'À Garder',
-                                            'peak': 'À Boire',
-                                            'old': 'Passé'
-                                        };
-                                        return [`${value} bouteilles`, labels[name as string] || name];
-                                    }}
-                                />} 
+                                content={<ChartTooltipContent />}
+                                formatter={(value: number, name: string) => [
+                                    `${value} bouteilles`,
+                                    maturityChartConfig[name as keyof typeof maturityChartConfig]?.label || name
+                                ]}
                             />
                             <Area
                                 type="monotone"
@@ -141,6 +137,7 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
                                 stroke="hsl(217, 91%, 60%)"
                                 fill="url(#fillKeep)"
                                 fillOpacity={0.6}
+                                strokeWidth={2}
                             />
                             <Area
                                 type="monotone"
@@ -149,6 +146,7 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
                                 stroke="hsl(142, 71%, 45%)"
                                 fill="url(#fillPeak)"
                                 fillOpacity={0.6}
+                                strokeWidth={2}
                             />
                             <Area
                                 type="monotone"
@@ -157,31 +155,7 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
                                 stroke="hsl(25, 95%, 53%)"
                                 fill="url(#fillOld)"
                                 fillOpacity={0.6}
-                            />
-                            <Legend 
-                                content={({ payload }) => (
-                                    <div className="flex items-center justify-center gap-6 mt-4">
-                                        {payload?.map((entry, index) => {
-                                            const labels: Record<string, string> = {
-                                                'keep': 'À Garder',
-                                                'peak': 'À Boire',
-                                                'old': 'Passé'
-                                            };
-                                            const dataKey = entry.dataKey != null ? String(entry.dataKey) : '';
-                                            return (
-                                                <div key={index} className="flex items-center gap-2">
-                                                    <div 
-                                                        className="w-3 h-3 rounded-sm" 
-                                                        style={{ backgroundColor: entry.color }}
-                                                    />
-                                                    <span className="text-xs text-muted-foreground">
-                                                        {labels[dataKey] || dataKey}
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                strokeWidth={2}
                             />
                         </AreaChart>
                     </ChartContainer>
@@ -190,4 +164,3 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
         </div>
     );
 }
-
