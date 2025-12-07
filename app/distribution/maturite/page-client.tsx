@@ -167,7 +167,7 @@ export default function MaturiteDistributionClient({ maturityByYear, currentMatu
                                                 'peak': 'À Boire',
                                                 'old': 'Passé'
                                             };
-                                            const dataKey = typeof entry.dataKey === 'string' ? entry.dataKey : String(entry.dataKey || '');
+                                            const dataKey = entry.dataKey != null ? String(entry.dataKey) : '';
                                             return (
                                                 <div key={index} className="flex items-center gap-2">
                                                     <div 
